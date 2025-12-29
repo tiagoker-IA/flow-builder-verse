@@ -137,7 +137,7 @@ export function Sidebar({
                       }}
                       onBlur={salvarTitulo}
                       autoFocus
-                      className="flex-1 h-7 text-sm bg-sidebar-background border-sidebar-border"
+                      className="flex-1 h-7 text-sm bg-sidebar text-sidebar-foreground border border-sidebar-border placeholder:text-sidebar-foreground/50"
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
