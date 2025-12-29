@@ -7,6 +7,7 @@ import { User, Sparkles } from "lucide-react";
 interface ChatMessagesProps {
   mensagens: Mensagem[];
   isLoading?: boolean;
+  onEnviarSugestao?: (mensagem: string) => void;
 }
 
 function TypingIndicator() {
@@ -19,13 +20,15 @@ function TypingIndicator() {
   );
 }
 
-export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
+export function ChatMessages({ mensagens, isLoading, onEnviarSugestao }: ChatMessagesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
+
+  const sugestoes = ["Exegese de Romanos 8", "O que é graça?", "Estudo sobre fé"];
 
   if (mensagens.length === 0 && !isLoading) {
     return (
@@ -42,13 +45,14 @@ export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
             Selecione um modo no topo e faça sua pergunta para começar.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-2 px-4">
-            {["Exegese de Romanos 8", "O que é graça?", "Estudo sobre fé"].map((sugestao) => (
-              <span 
+            {sugestoes.map((sugestao) => (
+              <button 
                 key={sugestao}
-                className="px-4 py-2 bg-secondary/50 text-muted-foreground text-sm rounded-lg border border-border/50 whitespace-nowrap hover:bg-secondary transition-colors cursor-default"
+                onClick={() => onEnviarSugestao?.(sugestao)}
+                className="px-4 py-2 bg-secondary/50 text-muted-foreground text-sm rounded-lg border border-border/50 whitespace-nowrap hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 cursor-pointer"
               >
                 {sugestao}
-              </span>
+              </button>
             ))}
           </div>
         </div>
