@@ -22,17 +22,84 @@ function TypingIndicator() {
   );
 }
 
+const markdownToHtml = (markdown: string): string => {
+  let html = markdown
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Bold and italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Code blocks
+    .replace(/```[\s\S]*?```/g, (match) => {
+      const code = match.slice(3, -3).replace(/^\w+\n/, '');
+      return `<pre><code>${code}</code></pre>`;
+    })
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    // Lists - unordered
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // Lists - ordered
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // Line breaks
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
+  // Wrap in paragraph if not already wrapped
+  if (!html.startsWith('<')) {
+    html = `<p>${html}</p>`;
+  }
+  
+  return html;
+};
+
+const markdownToPlainText = (markdown: string): string => {
+  return markdown
+    // Remove headers markers
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold/italic markers
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    // Remove code blocks markers
+    .replace(/```[\s\S]*?```/g, (match) => {
+      return match.slice(3, -3).replace(/^\w+\n/, '');
+    })
+    .replace(/`(.+?)`/g, '$1')
+    // Clean list markers
+    .replace(/^- /gm, '• ')
+    .replace(/^\d+\. /gm, '');
+};
+
 const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      const htmlContent = markdownToHtml(text);
+      const plainText = markdownToPlainText(text);
+      
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+      const plainBlob = new Blob([plainText], { type: 'text/plain' });
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': plainBlob
+        })
+      ]);
+      
       setCopied(true);
       toast.success("Copiado para a área de transferência");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error("Erro ao copiar");
+      // Fallback para navegadores que não suportam clipboard.write
+      const plainText = markdownToPlainText(text);
+      await navigator.clipboard.writeText(plainText);
+      setCopied(true);
+      toast.success("Copiado para a área de transferência");
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
