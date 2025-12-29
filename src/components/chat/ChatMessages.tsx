@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { Mensagem } from "@/types/chat";
 import { cn } from "@/lib/utils";
 import { User, Sparkles } from "lucide-react";
@@ -84,7 +85,13 @@ export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
               )}
             >
               {mensagem.conteudo ? (
-                <span className="whitespace-pre-wrap">{mensagem.conteudo}</span>
+                mensagem.remetente_ia ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
+                    <ReactMarkdown>{mensagem.conteudo}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <span className="whitespace-pre-wrap">{mensagem.conteudo}</span>
+                )
               ) : (
                 <TypingIndicator />
               )}
