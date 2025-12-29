@@ -17,7 +17,7 @@ export function ModoSelector({ modo, onModoChange }: ModoSelectorProps) {
   
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border/50">
+      <div className="flex items-center gap-1.5 p-1.5 bg-secondary/50 rounded-xl border border-border/50">
         {MODOS_CHAT.map((m) => {
           const Icon = m.icon;
           const isActive = modo === m.value;
@@ -28,9 +28,9 @@ export function ModoSelector({ modo, onModoChange }: ModoSelectorProps) {
                 <button
                   onClick={() => onModoChange(m.value)}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-background text-foreground shadow-sm border border-border/50"
+                      ? "bg-background text-foreground shadow-subtle border border-border/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                   )}
                 >
