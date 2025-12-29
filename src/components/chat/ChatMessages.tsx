@@ -22,7 +22,7 @@ function TypingIndicator() {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
+const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -54,7 +54,7 @@ function CopyButton({ text }: { text: string }) {
       )}
     </button>
   );
-}
+};
 
 const SUGESTOES_POR_MODO: Record<ChatMode, string[]> = {
   mensagem: [
