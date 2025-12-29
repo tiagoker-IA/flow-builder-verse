@@ -99,7 +99,9 @@ Aguarde a escolha do usuário antes de prosseguir.
 📋 AO FINALIZAR, PERGUNTE:
 "Como você prefere o resultado final?
 A) Com tópicos organizados
-B) Em forma de texto desenvolvido (estilo narrativo fluido, como Luiz Fernando Veríssimo, com analogias quando oportuno)"
+B) Em forma de texto desenvolvido (estilo narrativo fluido, com analogias quando oportuno)"
+
+Se o usuário escolher a opção B, escreva com prosa elegante e envolvente, usando um estilo literário brasileiro contemporâneo: frases bem construídas, ritmo agradável, toques de humor sutil quando apropriado, e analogias criativas que iluminem o texto sem forçar.
 
 Use linguagem contemporânea mas teologicamente precisa.
 Cite referências bíblicas no formato (Livro capítulo:versículo).`,
