@@ -1,8 +1,9 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Mensagem, ChatMode } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { User, Sparkles } from "lucide-react";
+import { User, Sparkles, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface ChatMessagesProps {
   mensagens: Mensagem[];
@@ -18,6 +19,40 @@ function TypingIndicator() {
       <span className="w-2 h-2 bg-primary/60 rounded-full animate-typing-dot-2" />
       <span className="w-2 h-2 bg-primary/60 rounded-full animate-typing-dot-3" />
     </div>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success("Copiado para a área de transferência");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("Erro ao copiar");
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3.5 h-3.5" />
+          Copiado
+        </>
+      ) : (
+        <>
+          <Copy className="w-3.5 h-3.5" />
+          Copiar
+        </>
+      )}
+    </button>
   );
 }
 
@@ -128,6 +163,9 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
                 )
               ) : (
                 <TypingIndicator />
+              )}
+              {mensagem.remetente_ia && mensagem.conteudo && (
+                <CopyButton text={mensagem.conteudo} />
               )}
             </div>
             {!mensagem.remetente_ia && (
