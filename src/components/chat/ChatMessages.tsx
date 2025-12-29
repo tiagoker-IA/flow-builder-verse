@@ -24,35 +24,98 @@ function TypingIndicator() {
 }
 
 const markdownToHtml = (markdown: string): string => {
-  let html = markdown
-    // Headers - Title: 18pt bold, double spacing after
-    .replace(/^### (.+)$/gm, '<h3 style="font-size: 16pt; font-weight: bold; margin-top: 24pt; margin-bottom: 24pt;">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 style="font-size: 16pt; font-weight: bold; margin-top: 24pt; margin-bottom: 24pt;">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 style="font-size: 18pt; font-weight: bold; margin-top: 0; margin-bottom: 24pt;">$1</h1>')
-    // Bold and italic
-    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Code blocks
-    .replace(/```[\s\S]*?```/g, (match) => {
-      const code = match.slice(3, -3).replace(/^\w+\n/, '');
-      return `<pre style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;"><code>${code}</code></pre>`;
-    })
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    // Lists - unordered
-    .replace(/^- (.+)$/gm, '<li style="font-size: 14pt; margin-top: 12pt; margin-bottom: 12pt;">$1</li>')
-    // Lists - ordered
-    .replace(/^\d+\. (.+)$/gm, '<li style="font-size: 14pt; margin-top: 12pt; margin-bottom: 12pt;">$1</li>')
-    // Line breaks - Body: 14pt with double spacing
-    .replace(/\n\n/g, '</p><p style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;">')
-    .replace(/\n/g, '<br>');
+  const lines = markdown.split('\n');
+  const result: string[] = [];
+  let inUnorderedList = false;
+  let inOrderedList = false;
   
-  // Wrap in paragraph if not already wrapped - Body: 14pt with double spacing
-  if (!html.startsWith('<')) {
-    html = `<p style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;">${html}</p>`;
+  const closeOpenLists = () => {
+    if (inUnorderedList) {
+      result.push('</ul>');
+      inUnorderedList = false;
+    }
+    if (inOrderedList) {
+      result.push('</ol>');
+      inOrderedList = false;
+    }
+  };
+
+  const processInlineFormatting = (text: string): string => {
+    return text
+      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code style="background-color: #f4f4f4; padding: 2px 4px; font-family: monospace;">$1</code>');
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    if (!line) {
+      closeOpenLists();
+      continue;
+    }
+
+    // Headers
+    if (line.startsWith('### ')) {
+      closeOpenLists();
+      const content = processInlineFormatting(line.slice(4));
+      result.push(`<h3 style="font-size: 14pt; font-weight: bold; margin-top: 18pt; margin-bottom: 12pt;">${content}</h3>`);
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      closeOpenLists();
+      const content = processInlineFormatting(line.slice(3));
+      result.push(`<h2 style="font-size: 16pt; font-weight: bold; margin-top: 18pt; margin-bottom: 12pt;">${content}</h2>`);
+      continue;
+    }
+    if (line.startsWith('# ')) {
+      closeOpenLists();
+      const content = processInlineFormatting(line.slice(2));
+      result.push(`<h1 style="font-size: 18pt; font-weight: bold; margin-top: 0; margin-bottom: 18pt;">${content}</h1>`);
+      continue;
+    }
+
+    // Unordered list items
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (inOrderedList) {
+        result.push('</ol>');
+        inOrderedList = false;
+      }
+      if (!inUnorderedList) {
+        result.push('<ul style="margin: 12pt 0; padding-left: 24pt;">');
+        inUnorderedList = true;
+      }
+      const content = processInlineFormatting(line.slice(2));
+      result.push(`<li style="font-size: 12pt; margin: 6pt 0;">${content}</li>`);
+      continue;
+    }
+
+    // Ordered list items
+    const orderedMatch = line.match(/^(\d+)\.\s+(.+)$/);
+    if (orderedMatch) {
+      if (inUnorderedList) {
+        result.push('</ul>');
+        inUnorderedList = false;
+      }
+      if (!inOrderedList) {
+        result.push('<ol style="margin: 12pt 0; padding-left: 24pt;">');
+        inOrderedList = true;
+      }
+      const content = processInlineFormatting(orderedMatch[2]);
+      result.push(`<li style="font-size: 12pt; margin: 6pt 0;">${content}</li>`);
+      continue;
+    }
+
+    // Regular paragraph
+    closeOpenLists();
+    const content = processInlineFormatting(line);
+    result.push(`<p style="font-size: 12pt; margin: 12pt 0; line-height: 1.5;">${content}</p>`);
   }
+
+  closeOpenLists();
   
-  return html;
+  return result.join('\n');
 };
 
 const markdownToPlainText = (markdown: string): string => {
@@ -162,6 +225,17 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
 
   const sugestoes = SUGESTOES_POR_MODO[modo] || SUGESTOES_POR_MODO.livre;
 
+  // Detect if we should show format options (when introduction step is complete)
+  const shouldShowFormatOptions = (): boolean => {
+    if (modo !== "mensagem") return false;
+    const lastAiMessages = mensagens.filter(m => m.remetente_ia).slice(-3);
+    const recentContent = lastAiMessages.map(m => m.conteudo?.toLowerCase() || "").join(" ");
+    const hasIntroduction = recentContent.includes("introdução") || recentContent.includes("abertura");
+    const hasAllSteps = recentContent.includes("conclusão") || recentContent.includes("concluí");
+    return hasIntroduction && hasAllSteps;
+  };
+
+
   if (mensagens.length === 0 && !isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
@@ -237,7 +311,7 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
                   <CopyButton text={mensagem.conteudo} />
                   {/* Show quick actions only on the last AI message and when not loading */}
                   {index === mensagens.length - 1 && !isLoading && onEnviarSugestao && (
-                    <QuickActions onAction={onEnviarSugestao} />
+                    <QuickActions onAction={onEnviarSugestao} showFormatOptions={shouldShowFormatOptions()} />
                   )}
                 </>
               )}
