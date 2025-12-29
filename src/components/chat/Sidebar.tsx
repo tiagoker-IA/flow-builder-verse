@@ -1,5 +1,7 @@
-import { Plus, Trash2, MessageCircle, X, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, MessageCircle, X, Sparkles, Pencil, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Conversa } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +11,7 @@ interface SidebarProps {
   onNovaConversa: () => void;
   onSelecionarConversa: (conversa: Conversa) => void;
   onDeletarConversa: (id: string) => void;
+  onRenomearConversa: (id: string, novoTitulo: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -19,9 +22,32 @@ export function Sidebar({
   onNovaConversa,
   onSelecionarConversa,
   onDeletarConversa,
+  onRenomearConversa,
   isOpen = true,
   onClose,
 }: SidebarProps) {
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [tituloEditado, setTituloEditado] = useState("");
+
+  const iniciarEdicao = (conversa: Conversa, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditandoId(conversa.id);
+    setTituloEditado(conversa.titulo);
+  };
+
+  const salvarTitulo = () => {
+    if (editandoId && tituloEditado.trim()) {
+      onRenomearConversa(editandoId, tituloEditado.trim());
+    }
+    setEditandoId(null);
+    setTituloEditado("");
+  };
+
+  const cancelarEdicao = () => {
+    setEditandoId(null);
+    setTituloEditado("");
+  };
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -93,22 +119,63 @@ export function Sidebar({
                       : "hover:bg-sidebar-accent/50 text-sidebar-foreground/80"
                   )}
                   onClick={() => {
-                    onSelecionarConversa(conversa);
-                    onClose?.();
+                    if (editandoId !== conversa.id) {
+                      onSelecionarConversa(conversa);
+                      onClose?.();
+                    }
                   }}
                 >
                   <MessageCircle className="w-4 h-4 shrink-0 opacity-60" />
-                  <span className="flex-1 truncate text-sm">{conversa.titulo}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeletarConversa(conversa.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded-md transition-all"
-                    title="Deletar conversa"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </button>
+                  
+                  {editandoId === conversa.id ? (
+                    <Input
+                      value={tituloEditado}
+                      onChange={(e) => setTituloEditado(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") salvarTitulo();
+                        if (e.key === "Escape") cancelarEdicao();
+                      }}
+                      onBlur={salvarTitulo}
+                      autoFocus
+                      className="flex-1 h-7 text-sm bg-sidebar-background border-sidebar-border"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="flex-1 truncate text-sm">{conversa.titulo}</span>
+                  )}
+
+                  {editandoId === conversa.id ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        salvarTitulo();
+                      }}
+                      className="p-1.5 hover:bg-primary/20 rounded-md transition-all"
+                      title="Salvar"
+                    >
+                      <Check className="w-3.5 h-3.5 text-primary" />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={(e) => iniciarEdicao(conversa, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-primary/20 rounded-md transition-all"
+                        title="Renomear conversa"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-primary" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeletarConversa(conversa.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded-md transition-all"
+                        title="Deletar conversa"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </button>
+                    </>
+                  )}
                 </div>
               ))
             )}

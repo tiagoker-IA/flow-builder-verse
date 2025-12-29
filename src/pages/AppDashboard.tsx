@@ -28,6 +28,7 @@ export default function AppDashboard() {
     criarConversa,
     selecionarConversa,
     deletarConversa,
+    atualizarTitulo,
   } = useConversas(user?.id);
 
   const { enviarMensagem } = useChat({
@@ -99,6 +100,7 @@ export default function AppDashboard() {
         onNovaConversa={handleNovaConversa}
         onSelecionarConversa={selecionarConversa}
         onDeletarConversa={handleDeletarConversa}
+        onRenomearConversa={atualizarTitulo}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
