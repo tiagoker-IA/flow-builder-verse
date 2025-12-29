@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['"Crimson Pro"', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -63,6 +67,15 @@ export default {
           ai: "hsl(var(--chat-ai))",
           "ai-foreground": "hsl(var(--chat-ai-foreground))",
         },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          light: "hsl(var(--gold-light))",
+          dark: "hsl(var(--gold-dark))",
+        },
+        navy: {
+          DEFAULT: "hsl(var(--navy))",
+          light: "hsl(var(--navy-light))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -82,16 +95,43 @@ export default {
           from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-in-up": {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
         "pulse-soft": {
           "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+          "50%": { opacity: "0.4" },
+        },
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-100%)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-out-left": {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to: { opacity: "0", transform: "translateX(-100%)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "typing-dot": {
+          "0%, 60%, 100%": { transform: "translateY(0)" },
+          "30%": { transform: "translateY(-4px)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "pulse-soft": "pulse-soft 1.5s ease-in-out infinite",
+        "fade-in-up": "fade-in-up 0.4s ease-out",
+        "pulse-soft": "pulse-soft 1.2s ease-in-out infinite",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "slide-out-left": "slide-out-left 0.3s ease-out",
+        "shimmer": "shimmer 2s linear infinite",
+        "typing-dot-1": "typing-dot 1s ease-in-out infinite",
+        "typing-dot-2": "typing-dot 1s ease-in-out infinite 0.15s",
+        "typing-dot-3": "typing-dot 1s ease-in-out infinite 0.3s",
       },
     },
   },

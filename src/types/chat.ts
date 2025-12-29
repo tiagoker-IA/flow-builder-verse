@@ -1,3 +1,5 @@
+import { BookOpen, Heart, GraduationCap, MessageCircle, LucideIcon } from "lucide-react";
+
 export type ChatMode = "exegese" | "devocional" | "academico" | "livre";
 
 export interface Conversa {
@@ -18,9 +20,41 @@ export interface Mensagem {
   created_at: string;
 }
 
-export const MODOS_CHAT: { value: ChatMode; label: string; description: string }[] = [
-  { value: "exegese", label: "Exegese", description: "Análise profunda de textos bíblicos" },
-  { value: "devocional", label: "Devocional", description: "Reflexões pessoais e aplicações" },
-  { value: "academico", label: "Acadêmico", description: "Estudos teológicos formais" },
-  { value: "livre", label: "Livre", description: "Conversa geral sobre temas bíblicos" },
+export interface ModoInfo {
+  value: ChatMode;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+export const MODOS_CHAT: ModoInfo[] = [
+  { 
+    value: "exegese", 
+    label: "Exegese", 
+    description: "Análise profunda de textos bíblicos",
+    icon: BookOpen,
+    color: "text-blue-600 dark:text-blue-400"
+  },
+  { 
+    value: "devocional", 
+    label: "Devocional", 
+    description: "Reflexões pessoais e aplicações",
+    icon: Heart,
+    color: "text-rose-600 dark:text-rose-400"
+  },
+  { 
+    value: "academico", 
+    label: "Acadêmico", 
+    description: "Estudos teológicos formais",
+    icon: GraduationCap,
+    color: "text-purple-600 dark:text-purple-400"
+  },
+  { 
+    value: "livre", 
+    label: "Livre", 
+    description: "Conversa geral sobre temas bíblicos",
+    icon: MessageCircle,
+    color: "text-emerald-600 dark:text-emerald-400"
+  },
 ];
