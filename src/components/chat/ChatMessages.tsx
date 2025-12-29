@@ -4,6 +4,7 @@ import { Mensagem, ChatMode } from "@/types/chat";
 import { cn } from "@/lib/utils";
 import { User, Sparkles, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { QuickActions } from "./QuickActions";
 
 interface ChatMessagesProps {
   mensagens: Mensagem[];
@@ -232,7 +233,13 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
                 <TypingIndicator />
               )}
               {mensagem.remetente_ia && mensagem.conteudo && (
-                <CopyButton text={mensagem.conteudo} />
+                <>
+                  <CopyButton text={mensagem.conteudo} />
+                  {/* Show quick actions only on the last AI message and when not loading */}
+                  {index === mensagens.length - 1 && !isLoading && onEnviarSugestao && (
+                    <QuickActions onAction={onEnviarSugestao} />
+                  )}
+                </>
               )}
             </div>
             {!mensagem.remetente_ia && (

@@ -8,6 +8,7 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModoSelector } from "@/components/chat/ModoSelector";
+import { ProgressIndicator } from "@/components/chat/ProgressIndicator";
 import { ChatMode } from "@/types/chat";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -118,6 +119,12 @@ export default function AppDashboard() {
         <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
           <ModoSelector modo={modo} onModoChange={setModo} />
         </div>
+        
+        {/* Progress indicator for message mode */}
+        <ProgressIndicator 
+          mensagens={mensagens} 
+          modo={conversaAtual?.modo || modo} 
+        />
         
         <ChatMessages 
           mensagens={mensagens} 
