@@ -24,10 +24,10 @@ function TypingIndicator() {
 
 const markdownToHtml = (markdown: string): string => {
   let html = markdown
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Headers - Title: 18pt bold, double spacing after
+    .replace(/^### (.+)$/gm, '<h3 style="font-size: 16pt; font-weight: bold; margin-top: 24pt; margin-bottom: 24pt;">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-size: 16pt; font-weight: bold; margin-top: 24pt; margin-bottom: 24pt;">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="font-size: 18pt; font-weight: bold; margin-top: 0; margin-bottom: 24pt;">$1</h1>')
     // Bold and italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -35,20 +35,20 @@ const markdownToHtml = (markdown: string): string => {
     // Code blocks
     .replace(/```[\s\S]*?```/g, (match) => {
       const code = match.slice(3, -3).replace(/^\w+\n/, '');
-      return `<pre><code>${code}</code></pre>`;
+      return `<pre style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;"><code>${code}</code></pre>`;
     })
     .replace(/`(.+?)`/g, '<code>$1</code>')
     // Lists - unordered
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/^- (.+)$/gm, '<li style="font-size: 14pt; margin-top: 12pt; margin-bottom: 12pt;">$1</li>')
     // Lists - ordered
-    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-    // Line breaks
-    .replace(/\n\n/g, '</p><p>')
+    .replace(/^\d+\. (.+)$/gm, '<li style="font-size: 14pt; margin-top: 12pt; margin-bottom: 12pt;">$1</li>')
+    // Line breaks - Body: 14pt with double spacing
+    .replace(/\n\n/g, '</p><p style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;">')
     .replace(/\n/g, '<br>');
   
-  // Wrap in paragraph if not already wrapped
+  // Wrap in paragraph if not already wrapped - Body: 14pt with double spacing
   if (!html.startsWith('<')) {
-    html = `<p>${html}</p>`;
+    html = `<p style="font-size: 14pt; margin-top: 24pt; margin-bottom: 24pt;">${html}</p>`;
   }
   
   return html;
@@ -222,7 +222,7 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
             >
               {mensagem.conteudo ? (
                 mensagem.remetente_ia ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2.5 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:font-serif">
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-serif prose-h1:text-lg prose-h1:font-bold prose-h1:mb-6 prose-h2:text-base prose-h2:font-bold prose-h2:my-6 prose-h3:text-base prose-h3:font-bold prose-h3:my-6 prose-p:text-sm prose-p:my-5 prose-ul:my-5 prose-ol:my-5 prose-li:my-2">
                     <ReactMarkdown>{mensagem.conteudo}</ReactMarkdown>
                   </div>
                 ) : (
