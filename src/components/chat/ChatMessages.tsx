@@ -206,7 +206,7 @@ const SUGESTOES_POR_MODO: Record<ChatMode, string[]> = {
   academico: [
     "O que é a Trindade?",
     "Doutrina da Eleição",
-    "Cristologia reformada",
+    "Cristologia bíblica",
   ],
   livre: [
     "O que é graça?",
@@ -248,7 +248,7 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
           </h2>
           <p className="text-muted-foreground leading-relaxed text-base">
             {modo === "mensagem" 
-              ? "Vou ajudá-lo a preparar uma mensagem poderosa na tradição Reformada. Clique em uma sugestão ou digite sua pergunta."
+              ? "Vou ajudá-lo a preparar uma mensagem bíblica poderosa. Clique em uma sugestão ou digite sua pergunta."
               : "Seu assistente para estudos bíblicos e teológicos. Selecione um modo no topo e faça sua pergunta para começar."}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-2 px-4">
