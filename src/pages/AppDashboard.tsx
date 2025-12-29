@@ -57,17 +57,14 @@ export default function AppDashboard() {
       if (!conversaAtual) {
         const novaConversa = await criarConversa(modo);
         if (novaConversa) {
-          setTimeout(() => {
-            enviarMensagem(conteudo).finally(() => setIsSending(false));
-          }, 100);
-        } else {
-          setIsSending(false);
+          await enviarMensagem(conteudo, novaConversa.id);
         }
       } else {
         await enviarMensagem(conteudo);
-        setIsSending(false);
       }
     } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+    } finally {
       setIsSending(false);
     }
   };
