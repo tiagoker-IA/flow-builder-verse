@@ -119,7 +119,11 @@ export default function AppDashboard() {
           <ModoSelector modo={modo} onModoChange={setModo} />
         </div>
         
-        <ChatMessages mensagens={mensagens} isLoading={isSending} />
+        <ChatMessages 
+          mensagens={mensagens} 
+          isLoading={isSending} 
+          onEnviarSugestao={handleEnviarMensagem}
+        />
         <ChatInput 
           onEnviar={handleEnviarMensagem} 
           isLoading={isSending}
