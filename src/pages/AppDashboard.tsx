@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 export default function AppDashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [modo, setModo] = useState<ChatMode>("livre");
+  const [modo, setModo] = useState<ChatMode>("mensagem");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
 

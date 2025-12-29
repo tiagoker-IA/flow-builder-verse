@@ -1,6 +1,6 @@
-import { BookOpen, Heart, GraduationCap, MessageCircle, LucideIcon } from "lucide-react";
+import { BookOpen, Heart, GraduationCap, MessageCircle, FileText, LucideIcon } from "lucide-react";
 
-export type ChatMode = "exegese" | "devocional" | "academico" | "livre";
+export type ChatMode = "mensagem" | "exegese" | "devocional" | "academico" | "livre";
 
 export interface Conversa {
   id: string;
@@ -29,6 +29,13 @@ export interface ModoInfo {
 }
 
 export const MODOS_CHAT: ModoInfo[] = [
+  { 
+    value: "mensagem", 
+    label: "Mensagem", 
+    description: "Preparação de sermões reformados",
+    icon: FileText,
+    color: "text-amber-600 dark:text-amber-400"
+  },
   { 
     value: "exegese", 
     label: "Exegese", 
