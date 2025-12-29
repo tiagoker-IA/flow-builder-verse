@@ -62,7 +62,7 @@ export function Sidebar({
       <div 
         className={cn(
           "fixed lg:relative inset-y-0 left-0 z-50",
-          "w-72 h-full bg-sidebar border-r border-sidebar-border flex flex-col",
+          "w-[280px] sm:w-72 h-full bg-sidebar border-r border-sidebar-border flex flex-col",
           "transition-transform duration-300 ease-in-out",
           "lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -81,16 +81,16 @@ export function Sidebar({
               variant="ghost" 
               size="icon" 
               onClick={onClose}
-              className="lg:hidden text-sidebar-foreground"
+              className="lg:hidden text-sidebar-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
           </div>
           <Button 
             onClick={onNovaConversa} 
-            className="w-full gap-2 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
+            className="w-full gap-2 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 h-11 min-h-[44px] text-base"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-5 h-5" />
             Nova Conversa
           </Button>
         </div>
@@ -113,7 +113,7 @@ export function Sidebar({
                 <div
                   key={conversa.id}
                   className={cn(
-                    "group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200",
+                    "group flex items-center gap-2 px-3 py-3 sm:py-2.5 rounded-lg cursor-pointer transition-all duration-200 min-h-[44px]",
                     conversaAtual?.id === conversa.id
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "hover:bg-sidebar-accent/50 text-sidebar-foreground/80"
@@ -159,20 +159,20 @@ export function Sidebar({
                     <>
                       <button
                         onClick={(e) => iniciarEdicao(conversa, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-primary/20 rounded-md transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-2 sm:p-1.5 hover:bg-primary/20 rounded-md transition-all min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
                         title="Renomear conversa"
                       >
-                        <Pencil className="w-3.5 h-3.5 text-primary" />
+                        <Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-primary" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onDeletarConversa(conversa.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded-md transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-2 sm:p-1.5 hover:bg-destructive/20 rounded-md transition-all min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 flex items-center justify-center"
                         title="Deletar conversa"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-destructive" />
                       </button>
                     </>
                   )}

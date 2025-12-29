@@ -41,11 +41,11 @@ export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
             Seu assistente para estudos bíblicos e teológicos. 
             Selecione um modo no topo e faça sua pergunta para começar.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <div className="mt-6 flex flex-wrap justify-center gap-2 px-4">
             {["Exegese de Romanos 8", "O que é graça?", "Estudo sobre fé"].map((sugestao) => (
               <span 
                 key={sugestao}
-                className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-full"
+                className="px-3 py-2 sm:py-1.5 bg-muted text-muted-foreground text-sm rounded-full whitespace-nowrap"
               >
                 {sugestao}
               </span>
@@ -61,7 +61,7 @@ export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
       ref={containerRef}
       className="flex-1 overflow-y-auto scrollbar-thin"
     >
-      <div className="max-w-3xl mx-auto p-4 space-y-4">
+      <div className="max-w-3xl mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         {mensagens.map((mensagem, index) => (
           <div
             key={mensagem.id}
@@ -78,7 +78,7 @@ export function ChatMessages({ mensagens, isLoading }: ChatMessagesProps) {
             )}
             <div
               className={cn(
-                "max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm",
+                "max-w-[85%] sm:max-w-[80%] px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-sm leading-relaxed shadow-sm",
                 mensagem.remetente_ia
                   ? "bg-chat-ai text-chat-ai-foreground rounded-tl-md"
                   : "bg-chat-user text-chat-user-foreground rounded-tr-md"

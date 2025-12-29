@@ -36,9 +36,9 @@ export function ChatInput({ onEnviar, disabled, isLoading }: ChatInputProps) {
   }, [mensagem]);
 
   return (
-    <div className="border-t border-border bg-background/80 backdrop-blur-sm p-4">
+    <div className="border-t border-border bg-background/80 backdrop-blur-sm p-3 sm:p-4">
       <div className="max-w-3xl mx-auto">
-        <div className="flex gap-3 items-end">
+        <div className="flex gap-2 sm:gap-3 items-end">
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -48,7 +48,7 @@ export function ChatInput({ onEnviar, disabled, isLoading }: ChatInputProps) {
               placeholder="Digite sua pergunta teológica..."
               disabled={disabled || isLoading}
               className={cn(
-                "min-h-[52px] max-h-[150px] resize-none pr-4 rounded-xl",
+                "min-h-[44px] sm:min-h-[52px] max-h-[150px] resize-none pr-4 rounded-xl text-base",
                 "border-border/50 bg-muted/30 focus:bg-background",
                 "transition-all duration-200"
               )}
@@ -60,7 +60,7 @@ export function ChatInput({ onEnviar, disabled, isLoading }: ChatInputProps) {
             disabled={disabled || isLoading || !mensagem.trim()}
             size="icon"
             className={cn(
-              "h-[52px] w-[52px] shrink-0 rounded-xl",
+              "h-11 w-11 sm:h-[52px] sm:w-[52px] shrink-0 rounded-xl min-h-[44px] min-w-[44px]",
               "bg-primary hover:bg-primary/90",
               "transition-all duration-200",
               "shadow-lg shadow-primary/20"
@@ -73,7 +73,7 @@ export function ChatInput({ onEnviar, disabled, isLoading }: ChatInputProps) {
             )}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-3">
+        <p className="text-xs text-muted-foreground text-center mt-2 sm:mt-3 hidden sm:block">
           Pressione Enter para enviar • Shift+Enter para nova linha
         </p>
       </div>
