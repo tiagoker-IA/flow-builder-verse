@@ -1,5 +1,11 @@
 import { ChatMode, MODOS_CHAT } from "@/types/chat";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ModoSelectorProps {
   modo: ChatMode;
@@ -7,23 +13,39 @@ interface ModoSelectorProps {
 }
 
 export function ModoSelector({ modo, onModoChange }: ModoSelectorProps) {
+  const modoAtual = MODOS_CHAT.find(m => m.value === modo);
+  
   return (
-    <div className="flex gap-2 p-1 bg-muted rounded-lg">
-      {MODOS_CHAT.map((m) => (
-        <button
-          key={m.value}
-          onClick={() => onModoChange(m.value)}
-          className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-            modo === m.value
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          title={m.description}
-        >
-          {m.label}
-        </button>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border/50">
+        {MODOS_CHAT.map((m) => {
+          const Icon = m.icon;
+          const isActive = modo === m.value;
+          
+          return (
+            <Tooltip key={m.value}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onModoChange(m.value)}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-background text-foreground shadow-sm border border-border/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                  )}
+                >
+                  <Icon className={cn("w-4 h-4", isActive && m.color)} />
+                  <span className="hidden sm:inline">{m.label}</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[200px]">
+                <p className="font-medium">{m.label}</p>
+                <p className="text-xs text-muted-foreground">{m.description}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    </TooltipProvider>
   );
 }

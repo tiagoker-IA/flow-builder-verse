@@ -7,13 +7,17 @@ import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { ModoSelector } from "@/components/chat/ModoSelector";
 import { ChatMode } from "@/types/chat";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function AppDashboard() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const [modo, setModo] = useState<ChatMode>("livre");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const {
     conversas,
@@ -41,17 +45,39 @@ export default function AppDashboard() {
 
   const handleNovaConversa = async () => {
     await criarConversa(modo);
+    toast({
+      title: "Nova conversa criada",
+      description: "Você pode começar a digitar sua pergunta.",
+    });
   };
 
   const handleEnviarMensagem = async (conteudo: string) => {
-    if (!conversaAtual) {
-      const novaConversa = await criarConversa(modo);
-      if (novaConversa) {
-        setTimeout(() => enviarMensagem(conteudo), 100);
+    setIsSending(true);
+    try {
+      if (!conversaAtual) {
+        const novaConversa = await criarConversa(modo);
+        if (novaConversa) {
+          setTimeout(() => {
+            enviarMensagem(conteudo).finally(() => setIsSending(false));
+          }, 100);
+        } else {
+          setIsSending(false);
+        }
+      } else {
+        await enviarMensagem(conteudo);
+        setIsSending(false);
       }
-    } else {
-      enviarMensagem(conteudo);
+    } catch (error) {
+      setIsSending(false);
     }
+  };
+
+  const handleDeletarConversa = async (id: string) => {
+    await deletarConversa(id);
+    toast({
+      title: "Conversa deletada",
+      variant: "destructive",
+    });
   };
 
   const handleLogout = async () => {
@@ -61,8 +87,9 @@ export default function AppDashboard() {
 
   if (authLoading || conversasLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground animate-pulse">Carregando...</p>
       </div>
     );
   }
@@ -74,7 +101,9 @@ export default function AppDashboard() {
         conversaAtual={conversaAtual}
         onNovaConversa={handleNovaConversa}
         onSelecionarConversa={selecionarConversa}
-        onDeletarConversa={deletarConversa}
+        onDeletarConversa={handleDeletarConversa}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <ChatHeader
@@ -82,9 +111,20 @@ export default function AppDashboard() {
           modo={conversaAtual?.modo as ChatMode || modo}
           onModoChange={setModo}
           onLogout={handleLogout}
+          onToggleSidebar={() => setSidebarOpen(true)}
+          showMenuButton={true}
         />
-        <ChatMessages mensagens={mensagens} />
-        <ChatInput onEnviar={handleEnviarMensagem} />
+        
+        {/* Mobile mode selector */}
+        <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
+          <ModoSelector modo={modo} onModoChange={setModo} />
+        </div>
+        
+        <ChatMessages mensagens={mensagens} isLoading={isSending} />
+        <ChatInput 
+          onEnviar={handleEnviarMensagem} 
+          isLoading={isSending}
+        />
       </div>
     </div>
   );
