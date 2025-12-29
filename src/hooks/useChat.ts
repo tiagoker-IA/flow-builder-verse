@@ -13,8 +13,10 @@ interface UseChatProps {
 export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatProps) {
   const { toast } = useToast();
 
-  const enviarMensagem = useCallback(async (conteudo: string) => {
-    if (!conteudo.trim() || !conversaId) return;
+  const enviarMensagem = useCallback(async (conteudo: string, conversaIdOverride?: string) => {
+    const idConversa = conversaIdOverride || conversaId;
+    if (!conteudo.trim() || !idConversa) return;
+    console.log("[useChat] Enviando mensagem para conversa:", idConversa);
 
     const novaOrdem = mensagens.length + 1;
 
@@ -23,7 +25,7 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
       .from("mensagens")
       .insert({
         conteudo: conteudo.trim(),
-        conversa_pai: conversaId,
+        conversa_pai: idConversa,
         remetente_ia: false,
         ordem: novaOrdem,
       })
@@ -58,7 +60,7 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
       {
         id: placeholderId,
         conteudo: "",
-        conversa_pai: conversaId,
+        conversa_pai: idConversa,
         remetente_ia: true,
         ordem: novaOrdem + 1,
         created_at: new Date().toISOString(),
@@ -131,7 +133,7 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
         .from("mensagens")
         .insert({
           conteudo: respostaCompleta,
-          conversa_pai: conversaId,
+          conversa_pai: idConversa,
           remetente_ia: true,
           ordem: novaOrdem + 1,
         })
