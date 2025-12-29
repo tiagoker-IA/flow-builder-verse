@@ -69,13 +69,13 @@ export function Sidebar({
         )}
       >
         {/* Header */}
-        <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-sidebar-primary to-gold-dark rounded-lg flex items-center justify-center">
+        <div className="p-5 border-b border-sidebar-border">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-sidebar-primary to-gold-dark rounded-lg flex items-center justify-center shadow-subtle">
                 <Sparkles className="w-4 h-4 text-sidebar-primary-foreground" />
               </div>
-              <span className="font-display font-semibold text-sidebar-foreground">LogosFlow</span>
+              <span className="font-serif font-medium text-lg text-sidebar-foreground tracking-tight">LogosFlow</span>
             </div>
             <Button 
               variant="ghost" 
@@ -88,7 +88,7 @@ export function Sidebar({
           </div>
           <Button 
             onClick={onNovaConversa} 
-            className="w-full gap-2 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 h-11 min-h-[44px] text-base"
+            className="w-full gap-2 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 h-11 min-h-[44px] text-base rounded-lg shadow-subtle font-medium"
           >
             <Plus className="w-5 h-5" />
             Nova Conversa
@@ -96,15 +96,15 @@ export function Sidebar({
         </div>
 
         {/* Conversations list */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin p-2">
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-3">
           <div className="space-y-1">
             {conversas.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <MessageCircle className="w-10 h-10 text-sidebar-foreground/30 mx-auto mb-3" />
-                <p className="text-sm text-sidebar-foreground/60">
+              <div className="text-center py-10 px-4">
+                <MessageCircle className="w-12 h-12 text-sidebar-foreground/20 mx-auto mb-4" />
+                <p className="text-sm text-sidebar-foreground/50 font-medium">
                   Nenhuma conversa ainda
                 </p>
-                <p className="text-xs text-sidebar-foreground/40 mt-1">
+                <p className="text-xs text-sidebar-foreground/30 mt-2">
                   Clique em "Nova Conversa" para começar
                 </p>
               </div>
@@ -113,10 +113,10 @@ export function Sidebar({
                 <div
                   key={conversa.id}
                   className={cn(
-                    "group flex items-center gap-2 px-3 py-3 sm:py-2.5 rounded-lg cursor-pointer transition-all duration-200 min-h-[44px]",
+                    "group flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all duration-200 min-h-[48px]",
                     conversaAtual?.id === conversa.id
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "hover:bg-sidebar-accent/50 text-sidebar-foreground/80"
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-subtle"
+                      : "hover:bg-sidebar-accent/50 text-sidebar-foreground/70"
                   )}
                   onClick={() => {
                     if (editandoId !== conversa.id) {
@@ -125,7 +125,7 @@ export function Sidebar({
                     }
                   }}
                 >
-                  <MessageCircle className="w-4 h-4 shrink-0 opacity-60" />
+                  <MessageCircle className="w-4 h-4 shrink-0 opacity-50" />
                   
                   {editandoId === conversa.id ? (
                     <Input
@@ -183,9 +183,9 @@ export function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/40 text-center">
-            Assistente Teológico IA
+        <div className="p-5 border-t border-sidebar-border">
+          <p className="text-xs text-sidebar-foreground/30 text-center font-medium tracking-wide uppercase">
+            Assistente Teológico
           </p>
         </div>
       </div>

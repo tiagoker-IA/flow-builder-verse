@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Crimson Pro"', 'Georgia', 'serif'],
+        display: ['Lora', 'Georgia', 'serif'],
+        serif: ['Lora', 'Georgia', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
@@ -76,6 +77,11 @@ export default {
           DEFAULT: "hsl(var(--navy))",
           light: "hsl(var(--navy-light))",
         },
+      },
+      boxShadow: {
+        'subtle': 'var(--shadow-sm)',
+        'elegant': 'var(--shadow-md)',
+        'elevated': 'var(--shadow-lg)',
       },
       borderRadius: {
         lg: "var(--radius)",
