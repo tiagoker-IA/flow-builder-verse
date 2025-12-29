@@ -123,6 +123,7 @@ export default function AppDashboard() {
           mensagens={mensagens} 
           isLoading={isSending} 
           onEnviarSugestao={handleEnviarMensagem}
+          modo={conversaAtual?.modo as ChatMode || modo}
         />
         <ChatInput 
           onEnviar={handleEnviarMensagem} 

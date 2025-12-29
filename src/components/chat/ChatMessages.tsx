@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { Mensagem } from "@/types/chat";
+import { Mensagem, ChatMode } from "@/types/chat";
 import { cn } from "@/lib/utils";
 import { User, Sparkles } from "lucide-react";
 
@@ -8,6 +8,7 @@ interface ChatMessagesProps {
   mensagens: Mensagem[];
   isLoading?: boolean;
   onEnviarSugestao?: (mensagem: string) => void;
+  modo?: ChatMode;
 }
 
 function TypingIndicator() {
@@ -20,7 +21,35 @@ function TypingIndicator() {
   );
 }
 
-export function ChatMessages({ mensagens, isLoading, onEnviarSugestao }: ChatMessagesProps) {
+const SUGESTOES_POR_MODO: Record<ChatMode, string[]> = {
+  mensagem: [
+    "Já tenho um texto escolhido",
+    "Me ajude a escolher um texto",
+    "Preciso de uma mensagem para domingo",
+  ],
+  exegese: [
+    "Exegese de Romanos 8",
+    "Análise de João 1:1-14",
+    "Estudo de Salmo 23",
+  ],
+  devocional: [
+    "Devocional sobre fé",
+    "Reflexão sobre Filipenses 4:13",
+    "Meditação no Salmo 91",
+  ],
+  academico: [
+    "O que é a Trindade?",
+    "Doutrina da Eleição",
+    "Cristologia reformada",
+  ],
+  livre: [
+    "O que é graça?",
+    "Como estudar a Bíblia?",
+    "Quem foi João Calvino?",
+  ],
+};
+
+export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "livre" }: ChatMessagesProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +57,7 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao }: ChatMes
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  const sugestoes = ["Exegese de Romanos 8", "O que é graça?", "Estudo sobre fé"];
+  const sugestoes = SUGESTOES_POR_MODO[modo] || SUGESTOES_POR_MODO.livre;
 
   if (mensagens.length === 0 && !isLoading) {
     return (
@@ -41,8 +70,9 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao }: ChatMes
             Olá! Sou o LogosFlow
           </h2>
           <p className="text-muted-foreground leading-relaxed text-base">
-            Seu assistente para estudos bíblicos e teológicos. 
-            Selecione um modo no topo e faça sua pergunta para começar.
+            {modo === "mensagem" 
+              ? "Vou ajudá-lo a preparar uma mensagem poderosa na tradição Reformada. Clique em uma sugestão ou digite sua pergunta."
+              : "Seu assistente para estudos bíblicos e teológicos. Selecione um modo no topo e faça sua pergunta para começar."}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-2 px-4">
             {sugestoes.map((sugestao) => (
