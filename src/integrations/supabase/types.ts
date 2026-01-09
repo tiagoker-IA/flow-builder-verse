@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          modo_chat: string | null
+          nota_geral: number | null
+          pagina: string | null
+          tipo: string
+          titulo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          modo_chat?: string | null
+          nota_geral?: number | null
+          pagina?: string | null
+          tipo: string
+          titulo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          modo_chat?: string | null
+          nota_geral?: number | null
+          pagina?: string | null
+          tipo?: string
+          titulo?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       mensagens: {
         Row: {
           conteudo: string
