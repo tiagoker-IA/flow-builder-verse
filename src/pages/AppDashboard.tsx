@@ -113,6 +113,7 @@ export default function AppDashboard() {
           onLogout={handleLogout}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton={true}
+          mensagens={mensagens}
         />
         
         {/* Mobile mode selector */}
