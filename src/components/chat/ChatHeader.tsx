@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ModoSelector } from "./ModoSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
-import { ChatMode, MODOS_CHAT } from "@/types/chat";
+import { ExportButton } from "./ExportButton";
+import { ChatMode, MODOS_CHAT, Mensagem } from "@/types/chat";
 
 interface ChatHeaderProps {
   titulo: string;
@@ -12,6 +13,7 @@ interface ChatHeaderProps {
   onLogout: () => void;
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
+  mensagens?: Mensagem[];
 }
 
 export function ChatHeader({ 
@@ -20,7 +22,8 @@ export function ChatHeader({
   onModoChange, 
   onLogout,
   onToggleSidebar,
-  showMenuButton 
+  showMenuButton,
+  mensagens = []
 }: ChatHeaderProps) {
   const modoAtual = MODOS_CHAT.find(m => m.value === modo);
   
@@ -57,6 +60,7 @@ export function ChatHeader({
         <div className="hidden md:block">
           <ModoSelector modo={modo} onModoChange={onModoChange} />
         </div>
+        <ExportButton mensagens={mensagens} titulo={titulo} modo={modo} />
         <FeedbackButton modoChat={modo} pagina="chat" />
         <ThemeToggle />
         <Button 
