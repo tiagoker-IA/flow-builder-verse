@@ -2,6 +2,7 @@ import { Sparkles, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModoSelector } from "./ModoSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { ChatMode, MODOS_CHAT } from "@/types/chat";
 
 interface ChatHeaderProps {
@@ -56,6 +57,7 @@ export function ChatHeader({
         <div className="hidden md:block">
           <ModoSelector modo={modo} onModoChange={onModoChange} />
         </div>
+        <FeedbackButton modoChat={modo} pagina="chat" />
         <ThemeToggle />
         <Button 
           variant="ghost" 
