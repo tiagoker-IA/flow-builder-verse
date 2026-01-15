@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Valid modes whitelist
+const VALID_MODES = ['livre', 'mensagem', 'exegese', 'devocional', 'academico'];
 
 // Simplified interaction rules for more natural conversation
 const INTERACTION_RULES = `
@@ -95,22 +99,105 @@ AJUDO COM:
 Direto, prestativo, sempre apontando para Cristo nas Escrituras.`
 };
 
+// Input validation function
+function validateInput(messages: unknown, modo: unknown): { valid: boolean; error?: string } {
+  // Validate modo
+  if (modo !== undefined && (typeof modo !== 'string' || !VALID_MODES.includes(modo))) {
+    return { valid: false, error: "Modo inválido" };
+  }
+
+  // Validate messages array exists and is an array
+  if (!Array.isArray(messages)) {
+    return { valid: false, error: "Formato de mensagens inválido" };
+  }
+
+  // Validate messages array length
+  if (messages.length === 0 || messages.length > 100) {
+    return { valid: false, error: "Número de mensagens fora dos limites permitidos" };
+  }
+
+  // Validate each message structure
+  for (const msg of messages) {
+    if (!msg || typeof msg !== 'object') {
+      return { valid: false, error: "Formato de mensagem inválido" };
+    }
+
+    const message = msg as Record<string, unknown>;
+
+    if (!message.role || !['user', 'assistant', 'system'].includes(message.role as string)) {
+      return { valid: false, error: "Role de mensagem inválida" };
+    }
+
+    if (!message.content || typeof message.content !== 'string') {
+      return { valid: false, error: "Conteúdo de mensagem inválido" };
+    }
+
+    if ((message.content as string).length > 10000) {
+      return { valid: false, error: "Mensagem muito longa" };
+    }
+  }
+
+  return { valid: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, modo = "livre" } = await req.json();
+    // JWT Authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+    
+    if (authError || !data?.claims) {
+      return new Response(
+        JSON.stringify({ error: 'Não autorizado' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = data.claims.sub;
+    console.log(`Authenticated user: ${userId}`);
+
+    // Parse and validate input
+    const body = await req.json();
+    const { messages, modo = "livre" } = body;
+
+    const validation = validateInput(messages, modo);
+    if (!validation.valid) {
+      return new Response(
+        JSON.stringify({ error: validation.error }), 
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: "Erro de configuração do servidor" }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const systemPrompt = SYSTEM_PROMPTS[modo] || SYSTEM_PROMPTS.livre;
 
-    console.log(`Chat request - mode: ${modo}, messages: ${messages.length}`);
+    console.log(`Chat request - user: ${userId}, mode: ${modo}, messages: ${messages.length}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -154,7 +241,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Chat function error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }), {
+    return new Response(JSON.stringify({ error: "Não foi possível processar sua solicitação" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
