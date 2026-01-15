@@ -99,7 +99,42 @@ AJUDO COM:
 Direto, prestativo, sempre apontando para Cristo nas Escrituras.`
 };
 
-// Input validation function
+// Prompt injection detection patterns
+const DANGEROUS_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?|context)/gi,
+  /disregard\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?|context)/gi,
+  /forget\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions?|prompts?|rules?|context)/gi,
+  /you\s+are\s+now\s+(a|an)\s+/gi,
+  /from\s+now\s+on\s+you\s+(are|will|must|should)/gi,
+  /reveal\s+(your\s+)?(system|internal|hidden|secret)\s+(prompt|instructions?)/gi,
+  /show\s+(me\s+)?(your\s+)?(system|internal|hidden|secret)\s+(prompt|instructions?)/gi,
+  /what\s+(is|are)\s+(your\s+)?(system|initial|original)\s+(prompt|instructions?)/gi,
+  /print\s+(your\s+)?(system|internal|hidden)\s+(prompt|instructions?)/gi,
+  /output\s+(your\s+)?(system|internal|hidden)\s+(prompt|instructions?)/gi,
+  /repeat\s+(your\s+)?(system|internal|hidden)\s+(prompt|instructions?)/gi,
+  /\[\s*SYSTEM\s*\]/gi,
+  /\{\s*SYSTEM\s*\}/gi,
+  /<\s*SYSTEM\s*>/gi,
+  /jailbreak/gi,
+  /DAN\s+mode/gi,
+];
+
+// Check message content for prompt injection attempts
+function containsPromptInjection(content: string): boolean {
+  const normalizedContent = content.toLowerCase().trim();
+  
+  for (const pattern of DANGEROUS_PATTERNS) {
+    // Reset regex lastIndex for global patterns
+    pattern.lastIndex = 0;
+    if (pattern.test(normalizedContent)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Input validation function with content sanitization
 function validateInput(messages: unknown, modo: unknown): { valid: boolean; error?: string } {
   // Validate modo
   if (modo !== undefined && (typeof modo !== 'string' || !VALID_MODES.includes(modo))) {
@@ -132,8 +167,16 @@ function validateInput(messages: unknown, modo: unknown): { valid: boolean; erro
       return { valid: false, error: "Conteúdo de mensagem inválido" };
     }
 
-    if ((message.content as string).length > 10000) {
+    const content = message.content as string;
+
+    if (content.length > 10000) {
       return { valid: false, error: "Mensagem muito longa" };
+    }
+
+    // Check for prompt injection attempts in user messages
+    if (message.role === 'user' && containsPromptInjection(content)) {
+      console.warn(`Potential prompt injection detected in user message`);
+      return { valid: false, error: "Conteúdo de mensagem inválido" };
     }
   }
 
