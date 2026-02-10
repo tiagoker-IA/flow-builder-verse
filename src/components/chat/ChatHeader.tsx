@@ -1,10 +1,12 @@
-import { Sparkles, LogOut, Menu } from "lucide-react";
+import { Sparkles, LogOut, Menu, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ModoSelector } from "./ModoSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { ExportButton } from "./ExportButton";
 import { ChatMode, MODOS_CHAT, Mensagem } from "@/types/chat";
+import { useAdmin } from "@/hooks/useAdmin";
 
 interface ChatHeaderProps {
   titulo: string;
@@ -25,6 +27,8 @@ export function ChatHeader({
   showMenuButton,
   mensagens = []
 }: ChatHeaderProps) {
+  const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
   const modoAtual = MODOS_CHAT.find(m => m.value === modo);
   
   return (
@@ -62,6 +66,17 @@ export function ChatHeader({
         </div>
         <ExportButton mensagens={mensagens} titulo={titulo} modo={modo} />
         <FeedbackButton modoChat={modo} pagina="chat" />
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/admin")}
+            title="Painel Admin"
+            className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
+          >
+            <Shield className="w-4 h-4" />
+          </Button>
+        )}
         <ThemeToggle />
         <Button 
           variant="ghost" 
