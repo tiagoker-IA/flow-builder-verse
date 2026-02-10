@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { BookOpen, Loader2 } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,8 +33,32 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const handleResetPassword = async () => {
+    if (!email.trim()) {
+      toast({ title: "Informe seu email", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      if (error) throw error;
+      toast({ title: "Email enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
+      setMode("login");
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar email", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "reset") {
+      await handleResetPassword();
+      return;
+    }
     setLoading(true);
 
     try {
@@ -47,7 +71,7 @@ export default function Auth() {
         return;
       }
 
-      if (isLogin) {
+      if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
@@ -128,64 +152,87 @@ export default function Auth() {
           </div>
           <div>
             <CardTitle className="text-2xl font-semibold">LogosFlow</CardTitle>
-            <CardDescription className="mt-1">
-              {isLogin ? "Entre na sua conta" : "Crie sua conta"}
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={loading}
-                />
-              </div>
-            )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isLogin ? "Entrar" : "Cadastrar"}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isLogin ? "Não tem uma conta? Cadastre-se" : "Já tem uma conta? Entre"}
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+             <CardDescription className="mt-1">
+               {mode === "login" ? "Entre na sua conta" : mode === "signup" ? "Crie sua conta" : "Recuperar senha"}
+             </CardDescription>
+           </div>
+         </CardHeader>
+         <CardContent>
+           <form onSubmit={handleSubmit} className="space-y-4">
+             <div className="space-y-2">
+               <Label htmlFor="email">Email</Label>
+               <Input
+                 id="email"
+                 type="email"
+                 placeholder="seu@email.com"
+                 value={email}
+                 onChange={(e) => setEmail(e.target.value)}
+                 disabled={loading}
+               />
+             </div>
+             {mode !== "reset" && (
+               <div className="space-y-2">
+                 <Label htmlFor="password">Senha</Label>
+                 <Input
+                   id="password"
+                   type="password"
+                   placeholder="••••••••"
+                   value={password}
+                   onChange={(e) => setPassword(e.target.value)}
+                   disabled={loading}
+                 />
+               </div>
+             )}
+             {mode === "signup" && (
+               <div className="space-y-2">
+                 <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                 <Input
+                   id="confirmPassword"
+                   type="password"
+                   placeholder="••••••••"
+                   value={confirmPassword}
+                   onChange={(e) => setConfirmPassword(e.target.value)}
+                   disabled={loading}
+                 />
+               </div>
+             )}
+             {mode === "login" && (
+               <div className="text-right">
+                 <button
+                   type="button"
+                   onClick={() => setMode("reset")}
+                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                 >
+                   Esqueci minha senha
+                 </button>
+               </div>
+             )}
+             <Button type="submit" className="w-full" disabled={loading}>
+               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+               {mode === "login" ? "Entrar" : mode === "signup" ? "Cadastrar" : "Enviar link de recuperação"}
+             </Button>
+           </form>
+           <div className="mt-6 text-center space-y-2">
+             {mode === "reset" ? (
+               <button
+                 type="button"
+                 onClick={() => setMode("login")}
+                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+               >
+                 Voltar ao login
+               </button>
+             ) : (
+               <button
+                 type="button"
+                 onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+               >
+                 {mode === "login" ? "Não tem uma conta? Cadastre-se" : "Já tem uma conta? Entre"}
+               </button>
+             )}
+           </div>
+         </CardContent>
+       </Card>
+     </div>
+   );
+ }
