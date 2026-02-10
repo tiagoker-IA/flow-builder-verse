@@ -129,7 +129,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="users">
-            <UsersTable usuarios={stats.usuarios} />
+            <UsersTable usuarios={stats.usuarios} onRefresh={() => { fetchStats(); }} />
           </TabsContent>
 
           <TabsContent value="feedbacks">
