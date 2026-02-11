@@ -1,60 +1,57 @@
 
 
-## Otimizacao de Performance
+## Adicionar Pagina de Perfil do Usuario
 
-### 1. Code Splitting com Lazy Loading
+O projeto ja tem autenticacao completa (login, cadastro, recuperacao de senha, protecao de rotas, RLS). O que falta e uma pagina de perfil do usuario.
 
-Todas as 4 paginas sao importadas estaticamente no `App.tsx`. Vamos usar `React.lazy()` + `Suspense` para carregar cada rota sob demanda, reduzindo o bundle inicial.
+### O que sera feito
 
-**Paginas para lazy loading:**
-- `LandingPage` (inclui 7 sub-componentes de landing)
-- `Auth`
-- `AppDashboard` (a mais pesada: chat, sidebar, hooks)
-- `AdminDashboard` (inclui Recharts, tabelas, formularios)
+#### 1. Criar tabela `profiles` no banco de dados
 
-**Componente de fallback:** Um spinner centralizado reutilizavel, consistente com o loading ja usado no `AppDashboard`.
+Uma nova tabela para armazenar dados adicionais do usuario:
+- `id` (uuid, referencia auth.users)
+- `nome` (text, nome de exibicao)
+- `avatar_url` (text, URL da foto de perfil)
+- `created_at`, `updated_at`
 
-### 2. Otimizacao do React Query
+Com RLS para que cada usuario so acesse seu proprio perfil.
 
-O `QueryClient` atual usa configuracao padrao. Vamos adicionar:
-- `staleTime: 5 * 60 * 1000` (5 min) para dados que nao mudam frequentemente
-- `gcTime: 10 * 60 * 1000` para manter cache por mais tempo
-- `refetchOnWindowFocus: false` para evitar re-fetches desnecessarios
+Um trigger automatico para criar o perfil quando um novo usuario se cadastra.
 
-### 3. Skeleton Loading para Admin
+#### 2. Criar bucket de storage `avatars`
 
-O painel admin mostra apenas um spinner generico. Vamos adicionar skeletons profissionais para:
-- Cards de estatisticas (4 cards com skeleton)
-- Graficos (area retangular com skeleton)
-- Tabela de usuarios (linhas com skeleton)
+Bucket publico para armazenar fotos de perfil, com politicas RLS para upload/delete apenas pelo proprio usuario.
 
-### 4. O que NAO sera feito (e por que)
+#### 3. Criar pagina `/profile`
 
-- **Otimizacao de imagens**: O projeto nao usa imagens pesadas, apenas icones SVG do Lucide
-- **Tree-shaking**: Ja esta configurado pelo Vite por padrao
-- **Metricas antes/depois**: Nao e possivel medir bundle size dentro do Lovable, mas o code splitting reduzira o carregamento inicial significativamente
-- **Remover dependencias**: Todas as dependencias instaladas estao sendo utilizadas
+Uma pagina com:
+- Exibicao do email (somente leitura, vem do auth)
+- Campo editavel para nome de exibicao
+- Upload de foto de perfil com preview
+- Botao para alterar senha (envia email de reset)
+- Botao para voltar ao app
+
+#### 4. Adicionar rota e navegacao
+
+- Nova rota `/profile` no `App.tsx` (com lazy loading)
+- Botao de perfil no `ChatHeader.tsx` (icone de usuario ao lado do logout)
 
 ### Detalhes tecnicos
 
+**Migracao SQL:**
+```text
+- Tabela profiles (id, nome, avatar_url, created_at, updated_at)
+- FK para auth.users com ON DELETE CASCADE
+- RLS: SELECT, UPDATE, INSERT apenas para o proprio usuario
+- Trigger: cria perfil automaticamente no signup
+- Bucket avatars com politicas de acesso
+```
+
+**Arquivos novos:**
+- `src/pages/Profile.tsx` - Pagina de perfil
+- `src/hooks/useProfile.ts` - Hook para carregar/atualizar perfil
+
 **Arquivos modificados:**
-
-1. **`src/App.tsx`**
-   - Substituir imports estaticos por `React.lazy()`
-   - Envolver `Routes` com `Suspense` e fallback de loading
-
-2. **`src/components/ui/PageLoader.tsx`** (novo)
-   - Componente de loading reutilizavel com spinner + texto
-   - Usado como fallback do Suspense
-
-3. **`src/App.tsx`** - Configuracao do QueryClient
-   - Adicionar `defaultOptions` com staleTime, gcTime e refetchOnWindowFocus
-
-4. **`src/components/admin/AdminSkeleton.tsx`** (novo)
-   - Skeleton para cards de estatisticas
-   - Skeleton para area de graficos
-   - Skeleton para linhas de tabela
-
-5. **`src/pages/AdminDashboard.tsx`**
-   - Substituir o spinner generico pelo `AdminSkeleton` durante carregamento
+- `src/App.tsx` - Adicionar rota /profile com lazy loading
+- `src/components/chat/ChatHeader.tsx` - Adicionar botao de perfil
 
