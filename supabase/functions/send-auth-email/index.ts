@@ -1,24 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-interface SendEmailPayload {
-  user: {
-    email: string;
-  };
-  email_data: {
-    token: string;
-    token_hash: string;
-    redirect_to: string;
-    email_action_type: string;
-    site_url: string;
-    token_new: string;
-    token_hash_new: string;
-  };
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -35,19 +21,46 @@ serve(async (req) => {
       );
     }
 
-    const payload: SendEmailPayload = await req.json();
-    const { user, email_data } = payload;
+    const { email, type, redirect_to } = await req.json();
+    console.log("Received request:", { email, type, redirect_to });
 
-    const email = user.email;
-    const { token_hash, redirect_to, email_action_type, site_url } = email_data;
+    if (!email || !type) {
+      return new Response(
+        JSON.stringify({ error: "Missing email or type" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Build confirmation URL
-    const confirmUrl = `${site_url}/auth/confirm?token_hash=${token_hash}&type=${email_action_type}&redirect_to=${encodeURIComponent(redirect_to || site_url)}`;
+    // Create admin client to generate link
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Generate the auth link using admin API
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: type === "recovery" ? "recovery" : "signup",
+      email,
+      options: {
+        redirectTo: redirect_to,
+      },
+    });
+
+    if (linkError) {
+      console.error("Error generating link:", linkError);
+      return new Response(
+        JSON.stringify({ error: linkError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const confirmUrl = linkData.properties?.action_link;
+    console.log("Generated link for:", email);
 
     let subject = "";
     let htmlContent = "";
 
-    switch (email_action_type) {
+    switch (type) {
       case "recovery":
         subject = "Recuperação de senha";
         htmlContent = `
@@ -86,48 +99,11 @@ serve(async (req) => {
         `;
         break;
 
-      case "magiclink":
-        subject = "Seu link de acesso";
-        htmlContent = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">Link de acesso</h2>
-            <p>Olá,</p>
-            <p>Clique no botão abaixo para acessar sua conta:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" 
-                 style="background-color: #7c3aed; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Acessar conta
-              </a>
-            </div>
-            <p style="color: #666; font-size: 12px;">Ou copie e cole este link no seu navegador: ${confirmUrl}</p>
-          </div>
-        `;
-        break;
-
-      case "email_change":
-        subject = "Confirme a alteração de email";
-        htmlContent = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333;">Alteração de email</h2>
-            <p>Olá,</p>
-            <p>Clique no botão abaixo para confirmar a alteração do seu email:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" 
-                 style="background-color: #7c3aed; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Confirmar alteração
-              </a>
-            </div>
-            <p style="color: #666; font-size: 12px;">Ou copie e cole este link no seu navegador: ${confirmUrl}</p>
-          </div>
-        `;
-        break;
-
       default:
         subject = "Notificação";
         htmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #333;">Notificação</h2>
-            <p>Olá,</p>
             <p>Clique no link abaixo:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${confirmUrl}" 
@@ -158,7 +134,7 @@ serve(async (req) => {
       const errorBody = await resendRes.text();
       console.error("Resend API error:", resendRes.status, errorBody);
       return new Response(
-        JSON.stringify({ error: "Failed to send email" }),
+        JSON.stringify({ error: "Failed to send email", details: errorBody }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

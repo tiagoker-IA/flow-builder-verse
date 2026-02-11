@@ -48,10 +48,16 @@ export default function Auth() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
+      const res = await supabase.functions.invoke("send-auth-email", {
+        body: {
+          email: email.trim(),
+          type: "recovery",
+          redirect_to: `${window.location.origin}/auth`,
+        },
       });
-      if (error) throw error;
+      if (res.error) throw res.error;
+      const data = res.data as any;
+      if (data?.error) throw new Error(data.error);
       toast({ title: "Email enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
       setMode("login");
     } catch (err: any) {
