@@ -208,6 +208,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      "send-auth-email": { Args: { event: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
