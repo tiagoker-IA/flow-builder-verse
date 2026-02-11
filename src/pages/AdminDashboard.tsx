@@ -12,6 +12,7 @@ import { FeedbacksTable } from "@/components/admin/FeedbacksTable";
 import { CampaignForm } from "@/components/admin/CampaignForm";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { ArrowLeft, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "@/hooks/use-toast";
 
@@ -71,12 +72,7 @@ export default function AdminDashboard() {
   }, [user, authLoading, isAdmin, adminLoading, navigate, fetchStats, fetchCampaigns]);
 
   if (authLoading || adminLoading || loadingStats) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-muted-foreground animate-pulse">Carregando painel...</p>
-      </div>
-    );
+    return <AdminSkeleton />;
   }
 
   if (!stats) return null;
