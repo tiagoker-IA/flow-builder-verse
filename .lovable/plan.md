@@ -1,52 +1,54 @@
 
 
-## Correcao: Esqueci minha senha
+## Correcao: Emails de recuperacao de senha nao chegam
 
 ### Problema
-O email de recuperacao e enviado com sucesso, mas quando o usuario clica no link e volta para `/auth`, a pagina nao reconhece que e um fluxo de redefinicao de senha. Em vez de mostrar um formulario para a nova senha, ela detecta a sessao e redireciona direto para `/app`.
+O backend processa a solicitacao com sucesso (status 200), mas o email nao e entregue. Isso acontece porque o servico de email integrado tem limitacoes de entrega. Sem um provedor de email dedicado configurado, os emails podem simplesmente nao chegar.
 
 ### Solucao
-Adicionar um novo modo `"update-password"` na pagina Auth que:
-1. Detecta o evento `PASSWORD_RECOVERY` no `onAuthStateChange`
-2. Mostra um formulario com campos "Nova senha" e "Confirmar nova senha"
-3. Usa `supabase.auth.updateUser({ password })` para salvar
-4. Apos sucesso, redireciona para `/app`
+Configurar o Resend como provedor de email para garantir a entrega confiavel de todos os emails de autenticacao (recuperacao de senha, confirmacao de conta, etc).
 
-### Mudancas no arquivo `src/pages/Auth.tsx`
+### Passos
 
-**1. Novo modo no state:**
-- Alterar o tipo do mode para incluir `"update-password"`
-- Adicionar state `newPassword` e `confirmNewPassword`
+**1. Criar conta no Resend (acao do usuario)**
+- Acessar [resend.com](https://resend.com) e criar uma conta gratuita
+- O plano gratuito permite ate 100 emails/dia, suficiente para a maioria dos casos
+- Gerar uma API Key no painel do Resend
 
-**2. Detectar evento de recuperacao:**
-- No `onAuthStateChange`, verificar se `event === "PASSWORD_RECOVERY"`
-- Quando detectado, setar `mode` para `"update-password"` em vez de redirecionar
+**2. Configurar dominio no Resend (opcional mas recomendado)**
+- Para melhor entrega, verificar um dominio proprio no Resend
+- Sem dominio verificado, os emails serao enviados de `onboarding@resend.dev` (funciona para testes)
 
-**3. Formulario de nova senha:**
-- Mostrar dois campos de senha quando `mode === "update-password"`
-- Validar que as senhas coincidem e tem pelo menos 6 caracteres
-- Chamar `supabase.auth.updateUser({ password: newPassword })`
-- Mostrar toast de sucesso e redirecionar para `/app`
+**3. Configurar o secret RESEND_API_KEY no projeto**
+- Adicionar a API Key do Resend como secret no projeto
+- Isso tambem habilitara o envio de campanhas de email que ja esta preparado no sistema
 
-**4. UI do formulario:**
-- Titulo: "Redefinir senha"
-- Descricao: "Digite sua nova senha"
-- Botoes de mostrar/ocultar senha nos campos
-- Botao "Salvar nova senha"
+**4. Criar edge function para envio de emails de autenticacao**
+- Criar `supabase/functions/send-auth-email/index.ts` que recebe os dados do email de autenticacao e envia via Resend
+- Configurar o hook de autenticacao no `supabase/config.toml` para usar esta funcao em vez do servico padrao
+
+**5. Atualizar config.toml**
+- Adicionar configuracao do auth hook para redirecionar emails de autenticacao para a edge function customizada
 
 ### Detalhes tecnicos
 
-```text
-onAuthStateChange callback:
-  if (event === "PASSWORD_RECOVERY") -> setMode("update-password"), NÃO redirecionar
-  else if (session?.user) -> navigate("/app")
+**Edge function `send-auth-email/index.ts`:**
+- Recebe payload com tipo de email (recovery, signup, etc), email do destinatario e token
+- Gera HTML do email baseado no tipo
+- Envia via API do Resend
+- Retorna resposta para o sistema de autenticacao
 
-handleUpdatePassword:
-  1. Validar newPassword === confirmNewPassword
-  2. Validar newPassword.length >= 6
-  3. supabase.auth.updateUser({ password: newPassword })
-  4. toast sucesso
-  5. navigate("/app")
+**Configuracao no `config.toml`:**
+```text
+[auth.hook.send_email]
+enabled = true
+uri = "pg-functions://supabase/functions/v1/send-auth-email"
 ```
 
-**Arquivo modificado:** `src/pages/Auth.tsx` (unico arquivo)
+**Resumo de arquivos:**
+- **Novo (1):** `supabase/functions/send-auth-email/index.ts`
+- **Modificado (1):** `supabase/config.toml`
+- **Secret necessario (1):** `RESEND_API_KEY`
+
+### Importante
+Antes de implementar, voce precisara criar uma conta no Resend e fornecer a API Key. O plano gratuito e suficiente para comecar.
