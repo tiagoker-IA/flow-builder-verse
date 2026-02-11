@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageSquare, MessagesSquare, Clock, BarChart3, Search, Trash2, ExternalLink } from "lucide-react";
+import { ArrowLeft, MessageSquare, MessagesSquare, Clock, BarChart3, Search, Trash2, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { exportToCsv } from "@/lib/exportToCsv";
 
 const PIE_COLORS = [
   "hsl(43, 91%, 38%)",
@@ -58,6 +59,24 @@ export default function UserDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading || conversasFiltradas.length === 0}
+              onClick={() => {
+                const rows = conversasFiltradas.map((c) => ({
+                  titulo: c.titulo,
+                  modo: c.modo,
+                  mensagens: c.mensagens_count,
+                  criado_em: c.data_criacao,
+                  atualizado_em: c.updated_at,
+                }));
+                exportToCsv("conversas.csv", rows);
+              }}
+            >
+              <Download className="w-4 h-4 mr-1" />
+              CSV
+            </Button>
             <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue />
