@@ -81,6 +81,36 @@ export function useConversas(userId: string | undefined) {
     await fetchMensagens(conversa.id);
   }, [fetchMensagens]);
 
+  // Realtime subscription para mensagens da conversa atual
+  useEffect(() => {
+    if (!conversaAtual?.id) return;
+
+    const channel = supabase
+      .channel(`mensagens-${conversaAtual.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'mensagens',
+          filter: `conversa_pai=eq.${conversaAtual.id}`,
+        },
+        (payload) => {
+          const novaMensagem = payload.new as Mensagem;
+          setMensagens((prev) => {
+            // Evitar duplicatas
+            if (prev.some((m) => m.id === novaMensagem.id)) return prev;
+            return [...prev, novaMensagem];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversaAtual?.id]);
+
   const deletarConversa = useCallback(async (conversaId: string) => {
     const { error } = await supabase
       .from("conversas")
