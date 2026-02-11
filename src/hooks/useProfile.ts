@@ -82,13 +82,20 @@ export function useProfile() {
 
   const resetPassword = async () => {
     if (!user?.email) return;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const res = await supabase.functions.invoke("send-auth-email", {
+        body: {
+          email: user.email,
+          type: "recovery",
+          redirect_to: window.location.origin,
+        },
+      });
+      if (res.error) throw res.error;
+      const data = res.data as any;
+      if (data?.error) throw new Error(data.error);
       toast({ title: "Email enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
   };
 
