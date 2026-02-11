@@ -1,73 +1,116 @@
-# Welcome to your Lovable project
+# ✝️ Flow Builder Verse
 
-## Project info
+> Assistente de IA para criação de textos teológicos e bíblicos — sermões, exegeses, devocionais e estudos acadêmicos.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss&logoColor=white)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 📖 Sobre o Projeto
 
-**Use Lovable**
+O **Flow Builder Verse** é uma aplicação web que utiliza inteligência artificial para auxiliar pastores, teólogos e estudantes na elaboração de textos bíblicos de alta qualidade. A ferramenta oferece modos especializados de interação, cada um adaptado a um tipo específico de produção textual.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## ✨ Funcionalidades
 
-Changes made via Lovable will be committed automatically to this repo.
+- **🗣️ Modo Mensagem** — Fluxo guiado em 7 etapas para preparação de sermões reformados
+- **📖 Modo Exegese** — Análise profunda e contextualizada de textos bíblicos
+- **❤️ Modo Devocional** — Reflexões pessoais e aplicações práticas
+- **🎓 Modo Acadêmico** — Estudos teológicos com rigor formal
+- **💬 Modo Livre** — Conversa aberta sobre temas bíblicos
+- **📄 Exportação para Word** — Exporte conversas em `.docx` com formatação profissional
+- **📋 Copiar como Rich Text** — Cole diretamente em processadores de texto
+- **🌗 Tema claro e escuro** — Alternância automática ou manual
+- **📊 Painel Administrativo** — Estatísticas de uso, gestão de usuários e campanhas de e-mail
+- **💡 Sistema de Feedback** — Envio de bugs e sugestões diretamente pela interface
 
-**Use your preferred IDE**
+## 🛠️ Stack Tecnológico
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+| Camada | Tecnologias |
+|--------|-------------|
+| **Frontend** | React 18, TypeScript, Vite |
+| **Estilização** | Tailwind CSS, shadcn/ui |
+| **Backend** | Lovable Cloud (Auth, Database, Edge Functions) |
+| **IA** | Lovable AI Gateway (Gemini 2.5 Flash) |
+| **Gráficos** | Recharts |
+| **Exportação** | docx, file-saver |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🚀 Como Começar
 
-Follow these steps:
+### Pré-requisitos
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- [Node.js](https://nodejs.org/) (v18 ou superior)
+- npm ou bun
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Instalação
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+# Clone o repositório
+git clone <URL_DO_REPOSITORIO>
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Acesse a pasta do projeto
+cd flow-builder-verse
+
+# Instale as dependências
+npm install
+
+# Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Variáveis de Ambiente
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
-**Use GitHub Codespaces**
+```env
+VITE_SUPABASE_URL=<sua_url>
+VITE_SUPABASE_PUBLISHABLE_KEY=<sua_chave_publica>
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+> ⚠️ Nunca compartilhe chaves privadas ou de serviço em repositórios públicos.
 
-## What technologies are used for this project?
+## 📁 Estrutura de Pastas
 
-This project is built with:
+```
+src/
+├── components/         # Componentes reutilizáveis
+│   ├── admin/          # Componentes do painel administrativo
+│   ├── chat/           # Interface de chat (input, mensagens, sidebar)
+│   ├── feedback/       # Formulário e botão de feedback
+│   ├── landing/        # Seções da landing page
+│   └── ui/             # Componentes base (shadcn/ui)
+├── hooks/              # Custom hooks (auth, chat, conversas, tema)
+├── integrations/       # Configuração do cliente backend
+├── lib/                # Utilitários (exportação, helpers)
+├── pages/              # Páginas da aplicação
+└── types/              # Tipagens TypeScript
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🗺️ Rotas da Aplicação
 
-## How can I deploy this project?
+| Rota | Descrição |
+|------|-----------|
+| `/` | Landing page pública |
+| `/auth` | Login e cadastro |
+| `/app` | Interface principal de chat com IA |
+| `/admin` | Painel administrativo (acesso restrito) |
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🤝 Como Contribuir
 
-## Can I connect a custom domain to my Lovable project?
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/minha-feature`)
+3. Commit suas alterações (`git commit -m 'feat: adiciona minha feature'`)
+4. Push para a branch (`git push origin feature/minha-feature`)
+5. Abra um Pull Request
 
-Yes, you can!
+## 📄 Licença
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Este projeto ainda não possui uma licença definida. Adicione um arquivo `LICENSE` conforme sua preferência.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+<p align="center">
+  Feito com ❤️ usando <a href="https://lovable.dev">Lovable</a>
+</p>
