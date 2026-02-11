@@ -1,54 +1,25 @@
 
 
-## Correcao: Emails de recuperacao de senha nao chegam
+## Próximo passo: Configurar a API Key e implementar
 
-### Problema
-O backend processa a solicitacao com sucesso (status 200), mas o email nao e entregue. Isso acontece porque o servico de email integrado tem limitacoes de entrega. Sem um provedor de email dedicado configurado, os emails podem simplesmente nao chegar.
+Agora que você tem a API Key do Resend pronta, vamos seguir com a implementação:
 
-### Solucao
-Configurar o Resend como provedor de email para garantir a entrega confiavel de todos os emails de autenticacao (recuperacao de senha, confirmacao de conta, etc).
+### Passo 1 - Adicionar o secret RESEND_API_KEY
+- Vou solicitar que você cole a API Key em um formulário seguro
+- Ela será armazenada de forma segura e acessível apenas pelas funções backend
 
-### Passos
+### Passo 2 - Criar a função backend de envio de emails
+- Criar `supabase/functions/send-auth-email/index.ts`
+- Essa função receberá as solicitações de email de autenticação (recuperação de senha, confirmação de conta) e enviará via Resend
+- Os emails serão enviados de `onboarding@resend.dev` (remetente padrão do Resend para contas sem domínio verificado)
 
-**1. Criar conta no Resend (acao do usuario)**
-- Acessar [resend.com](https://resend.com) e criar uma conta gratuita
-- O plano gratuito permite ate 100 emails/dia, suficiente para a maioria dos casos
-- Gerar uma API Key no painel do Resend
+### Passo 3 - Configurar o redirecionamento de emails
+- Atualizar `supabase/config.toml` para que os emails de autenticação passem pela nova função em vez do serviço padrão
 
-**2. Configurar dominio no Resend (opcional mas recomendado)**
-- Para melhor entrega, verificar um dominio proprio no Resend
-- Sem dominio verificado, os emails serao enviados de `onboarding@resend.dev` (funciona para testes)
+### Resumo
+- **Secret:** `RESEND_API_KEY` (você cola a chave)
+- **Novo arquivo:** `supabase/functions/send-auth-email/index.ts`
+- **Arquivo atualizado:** `supabase/config.toml`
 
-**3. Configurar o secret RESEND_API_KEY no projeto**
-- Adicionar a API Key do Resend como secret no projeto
-- Isso tambem habilitara o envio de campanhas de email que ja esta preparado no sistema
+Após a implementação, os emails de recuperação de senha e confirmação de conta serão entregues de forma confiável.
 
-**4. Criar edge function para envio de emails de autenticacao**
-- Criar `supabase/functions/send-auth-email/index.ts` que recebe os dados do email de autenticacao e envia via Resend
-- Configurar o hook de autenticacao no `supabase/config.toml` para usar esta funcao em vez do servico padrao
-
-**5. Atualizar config.toml**
-- Adicionar configuracao do auth hook para redirecionar emails de autenticacao para a edge function customizada
-
-### Detalhes tecnicos
-
-**Edge function `send-auth-email/index.ts`:**
-- Recebe payload com tipo de email (recovery, signup, etc), email do destinatario e token
-- Gera HTML do email baseado no tipo
-- Envia via API do Resend
-- Retorna resposta para o sistema de autenticacao
-
-**Configuracao no `config.toml`:**
-```text
-[auth.hook.send_email]
-enabled = true
-uri = "pg-functions://supabase/functions/v1/send-auth-email"
-```
-
-**Resumo de arquivos:**
-- **Novo (1):** `supabase/functions/send-auth-email/index.ts`
-- **Modificado (1):** `supabase/config.toml`
-- **Secret necessario (1):** `RESEND_API_KEY`
-
-### Importante
-Antes de implementar, voce precisara criar uma conta no Resend e fornecer a API Key. O plano gratuito e suficiente para comecar.
