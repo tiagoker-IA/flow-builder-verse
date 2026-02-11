@@ -203,10 +203,10 @@ const SUGESTOES_POR_MODO: Record<ChatMode, string[]> = {
     "Reflexão sobre Filipenses 4:13",
     "Meditação no Salmo 91",
   ],
-  academico: [
-    "O que é a Trindade?",
-    "Doutrina da Eleição",
-    "Cristologia bíblica",
+  grupo_pequeno: [
+    "Planeje uma reunião sobre ansiedade",
+    "Sugira quebra-gelos criativos",
+    "Crie perguntas para Filipenses 4:6-7",
   ],
   livre: [
     "O que é graça?",

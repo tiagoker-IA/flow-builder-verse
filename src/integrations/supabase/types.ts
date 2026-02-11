@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      compromissos_envio: {
+        Row: {
+          comprometeu: boolean
+          cumprido: boolean
+          envio_id: string
+          id: string
+          membro_id: string
+          testemunho_resultado: string | null
+        }
+        Insert: {
+          comprometeu?: boolean
+          cumprido?: boolean
+          envio_id: string
+          id?: string
+          membro_id: string
+          testemunho_resultado?: string | null
+        }
+        Update: {
+          comprometeu?: boolean
+          cumprido?: boolean
+          envio_id?: string
+          id?: string
+          membro_id?: string
+          testemunho_resultado?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compromissos_envio_envio_id_fkey"
+            columns: ["envio_id"]
+            isOneToOne: false
+            referencedRelation: "envio"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compromissos_envio_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "membros_grupo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversas: {
         Row: {
           data_criacao: string
@@ -40,6 +82,41 @@ export type Database = {
           usuario_criador?: string
         }
         Relationships: []
+      }
+      edificacao: {
+        Row: {
+          contexto_historico: string | null
+          id: string
+          referencia_biblica: string | null
+          reuniao_id: string
+          tema_principal: string | null
+          texto_completo: string | null
+        }
+        Insert: {
+          contexto_historico?: string | null
+          id?: string
+          referencia_biblica?: string | null
+          reuniao_id: string
+          tema_principal?: string | null
+          texto_completo?: string | null
+        }
+        Update: {
+          contexto_historico?: string | null
+          id?: string
+          referencia_biblica?: string | null
+          reuniao_id?: string
+          tema_principal?: string | null
+          texto_completo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edificacao_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_campaigns: {
         Row: {
@@ -80,6 +157,99 @@ export type Database = {
         }
         Relationships: []
       }
+      encontro: {
+        Row: {
+          duracao_minutos: number | null
+          id: string
+          instrucoes: string | null
+          relacionado_tema: boolean | null
+          reuniao_id: string
+          titulo: string | null
+        }
+        Insert: {
+          duracao_minutos?: number | null
+          id?: string
+          instrucoes?: string | null
+          relacionado_tema?: boolean | null
+          reuniao_id: string
+          titulo?: string | null
+        }
+        Update: {
+          duracao_minutos?: number | null
+          id?: string
+          instrucoes?: string | null
+          relacionado_tema?: boolean | null
+          reuniao_id?: string
+          titulo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encontro_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      envio: {
+        Row: {
+          desafio_texto: string | null
+          id: string
+          reuniao_id: string
+          tipo: Database["public"]["Enums"]["tipo_desafio"]
+        }
+        Insert: {
+          desafio_texto?: string | null
+          id?: string
+          reuniao_id: string
+          tipo?: Database["public"]["Enums"]["tipo_desafio"]
+        }
+        Update: {
+          desafio_texto?: string | null
+          id?: string
+          reuniao_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_desafio"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envio_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exaltacao: {
+        Row: {
+          duracao_minutos: number | null
+          id: string
+          notas_lider: string | null
+          reuniao_id: string
+        }
+        Insert: {
+          duracao_minutos?: number | null
+          id?: string
+          notas_lider?: string | null
+          reuniao_id: string
+        }
+        Update: {
+          duracao_minutos?: number | null
+          id?: string
+          notas_lider?: string | null
+          reuniao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exaltacao_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks: {
         Row: {
           created_at: string
@@ -116,6 +286,71 @@ export type Database = {
         }
         Relationships: []
       }
+      grupos_pequenos: {
+        Row: {
+          created_at: string
+          dia_semana: string | null
+          horario: string | null
+          id: string
+          lider_id: string
+          local: string | null
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          dia_semana?: string | null
+          horario?: string | null
+          id?: string
+          lider_id: string
+          local?: string | null
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          dia_semana?: string | null
+          horario?: string | null
+          id?: string
+          lider_id?: string
+          local?: string | null
+          nome?: string
+        }
+        Relationships: []
+      }
+      membros_grupo: {
+        Row: {
+          ativo: boolean
+          data_entrada: string
+          grupo_id: string
+          id: string
+          papel: Database["public"]["Enums"]["papel_membro"]
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          data_entrada?: string
+          grupo_id: string
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_membro"]
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          data_entrada?: string
+          grupo_id?: string
+          id?: string
+          papel?: Database["public"]["Enums"]["papel_membro"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membros_grupo_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_pequenos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensagens: {
         Row: {
           conteudo: string
@@ -151,6 +386,109 @@ export type Database = {
           },
         ]
       }
+      musicas_exaltacao: {
+        Row: {
+          artista: string | null
+          exaltacao_id: string
+          executada: boolean
+          id: string
+          link_video: string | null
+          titulo: string
+        }
+        Insert: {
+          artista?: string | null
+          exaltacao_id: string
+          executada?: boolean
+          id?: string
+          link_video?: string | null
+          titulo: string
+        }
+        Update: {
+          artista?: string | null
+          exaltacao_id?: string
+          executada?: boolean
+          id?: string
+          link_video?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "musicas_exaltacao_exaltacao_id_fkey"
+            columns: ["exaltacao_id"]
+            isOneToOne: false
+            referencedRelation: "exaltacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perguntas_edificacao: {
+        Row: {
+          edificacao_id: string
+          id: string
+          ordem: number
+          texto_pergunta: string
+          tipo: Database["public"]["Enums"]["tipo_pergunta"]
+        }
+        Insert: {
+          edificacao_id: string
+          id?: string
+          ordem?: number
+          texto_pergunta: string
+          tipo?: Database["public"]["Enums"]["tipo_pergunta"]
+        }
+        Update: {
+          edificacao_id?: string
+          id?: string
+          ordem?: number
+          texto_pergunta?: string
+          tipo?: Database["public"]["Enums"]["tipo_pergunta"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perguntas_edificacao_edificacao_id_fkey"
+            columns: ["edificacao_id"]
+            isOneToOne: false
+            referencedRelation: "edificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presencas: {
+        Row: {
+          id: string
+          membro_id: string
+          presente: boolean
+          reuniao_id: string
+        }
+        Insert: {
+          id?: string
+          membro_id: string
+          presente?: boolean
+          reuniao_id: string
+        }
+        Update: {
+          id?: string
+          membro_id?: string
+          presente?: boolean
+          reuniao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presencas_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "membros_grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presencas_reuniao_id_fkey"
+            columns: ["reuniao_id"]
+            isOneToOne: false
+            referencedRelation: "reunioes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -174,6 +512,107 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      quebragelos_favoritos: {
+        Row: {
+          created_at: string
+          id: string
+          instrucoes: string | null
+          tags: string[] | null
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrucoes?: string | null
+          tags?: string[] | null
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrucoes?: string | null
+          tags?: string[] | null
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      respostas_perguntas: {
+        Row: {
+          id: string
+          membro_id: string
+          pergunta_id: string
+          resposta_texto: string | null
+          tipo_partilha: Database["public"]["Enums"]["tipo_partilha"] | null
+        }
+        Insert: {
+          id?: string
+          membro_id: string
+          pergunta_id: string
+          resposta_texto?: string | null
+          tipo_partilha?: Database["public"]["Enums"]["tipo_partilha"] | null
+        }
+        Update: {
+          id?: string
+          membro_id?: string
+          pergunta_id?: string
+          resposta_texto?: string | null
+          tipo_partilha?: Database["public"]["Enums"]["tipo_partilha"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "respostas_perguntas_membro_id_fkey"
+            columns: ["membro_id"]
+            isOneToOne: false
+            referencedRelation: "membros_grupo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "respostas_perguntas_pergunta_id_fkey"
+            columns: ["pergunta_id"]
+            isOneToOne: false
+            referencedRelation: "perguntas_edificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reunioes: {
+        Row: {
+          created_at: string
+          data_reuniao: string
+          grupo_id: string
+          id: string
+          status: Database["public"]["Enums"]["status_reuniao"]
+          tema_geral: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_reuniao: string
+          grupo_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_reuniao"]
+          tema_geral?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_reuniao?: string
+          grupo_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["status_reuniao"]
+          tema_geral?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reunioes_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_pequenos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -201,6 +640,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_grupo_from_edificacao: {
+        Args: { _edificacao_id: string }
+        Returns: string
+      }
+      get_grupo_from_envio: { Args: { _envio_id: string }; Returns: string }
+      get_grupo_from_exaltacao: {
+        Args: { _exaltacao_id: string }
+        Returns: string
+      }
+      get_grupo_from_pergunta: {
+        Args: { _pergunta_id: string }
+        Returns: string
+      }
+      get_grupo_from_reuniao: { Args: { _reuniao_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -208,10 +661,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_group_leader: {
+        Args: { _grupo_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { _grupo_id: string; _user_id: string }
+        Returns: boolean
+      }
       "send-auth-email": { Args: { event: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
+      papel_membro: "lider" | "vice_lider" | "membro"
+      status_reuniao: "planejada" | "em_andamento" | "concluida"
+      tipo_desafio: "individual" | "coletivo" | "ambos"
+      tipo_partilha: "testemunho" | "luta" | "oracao"
+      tipo_pergunta: "reflexiva" | "testemunhal" | "aplicacao" | "comunitaria"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -340,6 +806,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      papel_membro: ["lider", "vice_lider", "membro"],
+      status_reuniao: ["planejada", "em_andamento", "concluida"],
+      tipo_desafio: ["individual", "coletivo", "ambos"],
+      tipo_partilha: ["testemunho", "luta", "oracao"],
+      tipo_pergunta: ["reflexiva", "testemunhal", "aplicacao", "comunitaria"],
     },
   },
 } as const
