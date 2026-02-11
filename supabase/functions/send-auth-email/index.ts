@@ -48,10 +48,10 @@ serve(async (req) => {
 
     if (linkError) {
       console.error("Error generating link:", linkError);
-      return new Response(
-        JSON.stringify({ error: linkError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Don't reveal whether user exists - always return success
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const confirmUrl = linkData.properties?.action_link;
