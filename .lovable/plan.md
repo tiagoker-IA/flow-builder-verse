@@ -1,106 +1,57 @@
 
 
-## Configuracao de Testes Automatizados
+## Plano: Correcao de Seguranca e Melhorias
 
-Configurar um ambiente de testes profissional com Vitest e Testing Library, incluindo mocks do backend, testes unitarios e de integracao, com exemplos praticos para replicar.
+### 1. Correcao de Seguranca no Chat (Prioridade Alta)
 
-### O que sera feito
+**Problema encontrado:** O hook `useChat.ts` envia requisicoes para a funcao de chat usando a chave publica do projeto em vez do token JWT do usuario autenticado. Isso impede que o backend identifique corretamente quem esta fazendo a requisicao.
 
-#### 1. Instalar dependencias de teste
+**Correcao:** Alterar `useChat.ts` para obter o token da sessao do usuario via `supabase.auth.getSession()` e usa-lo no header `Authorization`.
 
-Adicionar ao `devDependencies`:
-- `vitest` - Runner de testes compativel com Vite
-- `@testing-library/react` - Testes de componentes React
-- `@testing-library/jest-dom` - Matchers extras para DOM
-- `jsdom` - Ambiente DOM simulado
+**Arquivo modificado:** `src/hooks/useChat.ts`
 
-#### 2. Criar configuracao do Vitest
+### 2. Verificacao de Seguranca Geral
 
-Novo arquivo `vitest.config.ts` separado do `vite.config.ts`, com:
-- Ambiente `jsdom`
-- Globals habilitados (describe, it, expect sem import)
-- Setup file para matchers do jest-dom
-- Path alias `@/` configurado
+O linter de seguranca do banco de dados nao encontrou problemas - as politicas RLS estao configuradas corretamente. Nenhuma acao adicional necessaria aqui.
 
-#### 3. Criar arquivo de setup dos testes
+### 3. Notificacoes em Tempo Real no Chat
 
-`src/test/setup.ts` com:
-- Import do `@testing-library/jest-dom`
-- Mock do `matchMedia` (necessario para componentes com media queries)
+**O que muda:** Quando uma conversa esta aberta, novas mensagens salvas no banco aparecem automaticamente sem precisar recarregar.
 
-#### 4. Criar mocks reutilizaveis
+**Como funciona:** Usar o canal Realtime do banco de dados para escutar insercoes na tabela `mensagens` filtradas pela conversa atual.
 
-`src/test/mocks/supabase.ts` - Mock completo do cliente Supabase:
-- `auth.getSession`, `auth.getUser`, `auth.onAuthStateChange`
-- Queries `.from().select().eq()` etc.
-- Storage `.upload`, `.getPublicUrl`
+**Arquivos:**
+- Migração SQL: Habilitar realtime na tabela `mensagens`
+- `src/hooks/useConversas.ts` - Adicionar subscription realtime ao selecionar conversa
 
-`src/test/mocks/data.ts` - Dados de teste:
-- Usuario mockado
-- Perfil mockado
-- Conversas e mensagens de exemplo
+### 4. Melhorias no Dashboard Pessoal
 
-#### 5. Criar testes de exemplo
+**Exportacao CSV:** Botao para exportar dados de conversas e atividade em formato CSV.
 
-**Teste unitario de utilitario** - `src/lib/utils.test.ts`:
-- Testar a funcao `cn()` com diferentes inputs
+**Arquivo novo:** `src/lib/exportToCsv.ts` - Utilitario de exportacao
+**Arquivo modificado:** `src/pages/UserDashboard.tsx` - Adicionar botao de exportacao
 
-**Teste unitario de tipos/constantes** - `src/types/chat.test.ts`:
-- Validar que `MODOS_CHAT` tem todos os modos esperados
-
-**Teste de componente UI** - `src/components/ui/button.test.tsx`:
-- Renderizacao com variantes diferentes
-- Click handler funciona
-- Estado disabled
-
-**Teste de hook** - `src/hooks/useAuth.test.ts`:
-- Mock do Supabase auth
-- Verificar estados loading, user, session
-
-**Teste de integracao** - `src/pages/Auth.test.tsx`:
-- Renderizacao do formulario de login
-- Interacao com campos e botao de submit
-
-#### 6. Atualizar TypeScript config
-
-Adicionar `"vitest/globals"` ao `types` em `tsconfig.app.json` para autocomplete dos globals.
+---
 
 ### Detalhes tecnicos
 
-**Estrutura de pastas:**
+**Correcao de seguranca (useChat.ts):**
 ```text
-src/
-  test/
-    setup.ts          -- Setup global (jest-dom, matchMedia mock)
-    mocks/
-      supabase.ts     -- Mock do cliente Supabase
-      data.ts         -- Dados de teste reutilizaveis
-  lib/
-    utils.test.ts     -- Teste unitario do cn()
-  types/
-    chat.test.ts      -- Teste das constantes
-  components/
-    ui/
-      button.test.tsx -- Teste do componente Button
-  hooks/
-    useAuth.test.ts   -- Teste do hook de autenticacao
-  pages/
-    Auth.test.tsx     -- Teste de integracao da pagina
+Antes:  Authorization: Bearer VITE_SUPABASE_PUBLISHABLE_KEY
+Depois: Authorization: Bearer session.access_token
 ```
+O token JWT do usuario permite que a edge function `chat` identifique o usuario via `getClaims()`, garantindo autenticacao real.
 
-**Arquivos novos (9):**
-- `vitest.config.ts`
-- `src/test/setup.ts`
-- `src/test/mocks/supabase.ts`
-- `src/test/mocks/data.ts`
-- `src/lib/utils.test.ts`
-- `src/types/chat.test.ts`
-- `src/components/ui/button.test.tsx`
-- `src/hooks/useAuth.test.ts`
-- `src/pages/Auth.test.tsx`
+**Realtime (useConversas.ts):**
+- Criar subscription com `supabase.channel()` filtrada por `conversa_pai`
+- Cleanup automatico ao trocar de conversa ou desmontar componente
+- Migração SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE public.mensagens;`
 
-**Arquivos modificados (2):**
-- `package.json` - Adicionar devDependencies e script `"test"`
-- `tsconfig.app.json` - Adicionar `"vitest/globals"` aos types
+**Exportacao CSV:**
+- Funcao generica que converte array de objetos em string CSV
+- Download automatico via `Blob` e link temporario
 
-**Nota sobre CI/CD:** GitHub Actions so pode ser configurado diretamente no repositorio GitHub. Apos conectar o projeto ao GitHub, um workflow `.github/workflows/test.yml` pode ser adicionado para rodar testes automaticamente em PRs.
+**Resumo de arquivos:**
+- **Modificados (3):** `useChat.ts`, `useConversas.ts`, `UserDashboard.tsx`
+- **Novos (1):** `src/lib/exportToCsv.ts`
+- **Migracao SQL (1):** Habilitar realtime para mensagens
