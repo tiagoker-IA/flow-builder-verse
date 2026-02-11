@@ -1,38 +1,60 @@
 
 
-## Atualizar README.md com documentacao profissional
+## Otimizacao de Performance
 
-### O que sera feito
+### 1. Code Splitting com Lazy Loading
 
-Reescrever o `README.md` com uma estrutura completa e profissional, baseada nas informacoes reais do projeto Flow Builder Verse.
+Todas as 4 paginas sao importadas estaticamente no `App.tsx`. Vamos usar `React.lazy()` + `Suspense` para carregar cada rota sob demanda, reduzindo o bundle inicial.
 
-### Estrutura proposta
+**Paginas para lazy loading:**
+- `LandingPage` (inclui 7 sub-componentes de landing)
+- `Auth`
+- `AppDashboard` (a mais pesada: chat, sidebar, hooks)
+- `AdminDashboard` (inclui Recharts, tabelas, formularios)
 
-1. **Cabecalho** - Nome do projeto com descricao curta
-2. **Badges** - Apenas badges relevantes (tecnologias usadas), sem badges de CI/CD falsos
-3. **Descricao** - O que e o Flow Builder Verse: assistente de IA para criar textos profissionais, com modos de criacao, avaliacao e reescrita
-4. **Funcionalidades principais** - Chat com IA, modos de operacao, exportacao Word, tema claro/escuro, painel admin, sistema de feedback
-5. **Stack tecnologico** - React, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lovable Cloud (backend), Recharts
-6. **Como comecar** - Pre-requisitos (Node.js, npm), instalacao, variaveis de ambiente (formato generico, sem valores reais), rodar localmente
-7. **Estrutura de pastas** - Explicacao da organizacao: pages, components, hooks, integrations, types, lib
-8. **Rotas da aplicacao** - Landing (/), Auth (/auth), App (/app), Admin (/admin)
-9. **Como contribuir** - Guia basico de contribuicao
-10. **Licenca** - Placeholder para o usuario definir
+**Componente de fallback:** Um spinner centralizado reutilizavel, consistente com o loading ja usado no `AppDashboard`.
+
+### 2. Otimizacao do React Query
+
+O `QueryClient` atual usa configuracao padrao. Vamos adicionar:
+- `staleTime: 5 * 60 * 1000` (5 min) para dados que nao mudam frequentemente
+- `gcTime: 10 * 60 * 1000` para manter cache por mais tempo
+- `refetchOnWindowFocus: false` para evitar re-fetches desnecessarios
+
+### 3. Skeleton Loading para Admin
+
+O painel admin mostra apenas um spinner generico. Vamos adicionar skeletons profissionais para:
+- Cards de estatisticas (4 cards com skeleton)
+- Graficos (area retangular com skeleton)
+- Tabela de usuarios (linhas com skeleton)
+
+### 4. O que NAO sera feito (e por que)
+
+- **Otimizacao de imagens**: O projeto nao usa imagens pesadas, apenas icones SVG do Lucide
+- **Tree-shaking**: Ja esta configurado pelo Vite por padrao
+- **Metricas antes/depois**: Nao e possivel medir bundle size dentro do Lovable, mas o code splitting reduzira o carregamento inicial significativamente
+- **Remover dependencias**: Todas as dependencias instaladas estao sendo utilizadas
 
 ### Detalhes tecnicos
 
-**Arquivo:** `README.md`
+**Arquivos modificados:**
 
-- Substituicao completa do conteudo atual (que e o template padrao do Lovable)
-- Markdown bem formatado com secoes claras
-- Nenhuma informacao sensivel sera incluida (chaves, URLs de projeto)
-- Emojis discretos como separadores visuais de secao
+1. **`src/App.tsx`**
+   - Substituir imports estaticos por `React.lazy()`
+   - Envolver `Routes` com `Suspense` e fallback de loading
 
-### O que NAO sera incluido (e por que)
+2. **`src/components/ui/PageLoader.tsx`** (novo)
+   - Componente de loading reutilizavel com spinner + texto
+   - Usado como fallback do Suspense
 
-- **Badges de build**: nao ha CI/CD configurado
-- **Screenshots**: precisam ser gerados manualmente pelo usuario
-- **Roadmap detalhado**: depende das decisoes do usuario sobre o futuro do projeto
+3. **`src/App.tsx`** - Configuracao do QueryClient
+   - Adicionar `defaultOptions` com staleTime, gcTime e refetchOnWindowFocus
 
-Nenhuma alteracao em codigo ou backend.
+4. **`src/components/admin/AdminSkeleton.tsx`** (novo)
+   - Skeleton para cards de estatisticas
+   - Skeleton para area de graficos
+   - Skeleton para linhas de tabela
+
+5. **`src/pages/AdminDashboard.tsx`**
+   - Substituir o spinner generico pelo `AdminSkeleton` durante carregamento
 
