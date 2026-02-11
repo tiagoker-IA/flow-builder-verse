@@ -9,10 +9,12 @@ import { useToast } from "@/hooks/use-toast";
 import { BookOpen, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
-  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "reset" | "update-password">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,6 +23,10 @@ export default function Auth() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("update-password");
+        return;
+      }
       if (session?.user) {
         navigate("/app");
       }
@@ -50,6 +56,32 @@ export default function Auth() {
       setMode("login");
     } catch (err: any) {
       toast({ title: "Erro ao enviar email", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      toast({ title: "Preencha todos os campos", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast({ title: "Senhas não conferem", description: "As senhas devem ser iguais.", variant: "destructive" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: "Senha muito curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: "Senha atualizada!", description: "Sua senha foi redefinida com sucesso." });
+      navigate("/app");
+    } catch (err: any) {
+      toast({ title: "Erro ao atualizar senha", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -155,11 +187,53 @@ export default function Auth() {
           <div>
             <CardTitle className="text-2xl font-semibold">LogosFlow</CardTitle>
              <CardDescription className="mt-1">
-               {mode === "login" ? "Entre na sua conta" : mode === "signup" ? "Crie sua conta" : "Recuperar senha"}
+               {mode === "login" ? "Entre na sua conta" : mode === "signup" ? "Crie sua conta" : mode === "update-password" ? "Digite sua nova senha" : "Recuperar senha"}
              </CardDescription>
            </div>
          </CardHeader>
          <CardContent>
+           {mode === "update-password" ? (
+             <form onSubmit={(e) => { e.preventDefault(); handleUpdatePassword(); }} className="space-y-4">
+               <div className="space-y-2">
+                 <Label htmlFor="newPassword">Nova Senha</Label>
+                 <div className="relative">
+                   <Input
+                     id="newPassword"
+                     type={showPassword ? "text" : "password"}
+                     placeholder="••••••••"
+                     value={newPassword}
+                     onChange={(e) => setNewPassword(e.target.value)}
+                     disabled={loading}
+                     className="pr-10"
+                   />
+                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                   </button>
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <Label htmlFor="confirmNewPassword">Confirmar Nova Senha</Label>
+                 <div className="relative">
+                   <Input
+                     id="confirmNewPassword"
+                     type={showConfirmPassword ? "text" : "password"}
+                     placeholder="••••••••"
+                     value={confirmNewPassword}
+                     onChange={(e) => setConfirmNewPassword(e.target.value)}
+                     disabled={loading}
+                     className="pr-10"
+                   />
+                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                   </button>
+                 </div>
+               </div>
+               <Button type="submit" className="w-full" disabled={loading}>
+                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                 Salvar nova senha
+               </Button>
+             </form>
+           ) : (
            <form onSubmit={handleSubmit} className="space-y-4">
              <div className="space-y-2">
                <Label htmlFor="email">Email</Label>
@@ -234,8 +308,9 @@ export default function Auth() {
                {mode === "login" ? "Entrar" : mode === "signup" ? "Cadastrar" : "Enviar link de recuperação"}
              </Button>
            </form>
+           )}
            <div className="mt-6 text-center space-y-2">
-             {mode === "reset" ? (
+             {mode === "update-password" ? null : mode === "reset" ? (
                <button
                  type="button"
                  onClick={() => setMode("login")}
