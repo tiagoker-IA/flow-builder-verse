@@ -1,4 +1,4 @@
-import { Sparkles, LogOut, Menu, Shield } from "lucide-react";
+import { Sparkles, LogOut, Menu, Shield, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ModoSelector } from "./ModoSelector";
@@ -78,6 +78,15 @@ export function ChatHeader({
           </Button>
         )}
         <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/profile")}
+          title="Meu Perfil"
+          className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
+        >
+          <UserCircle className="w-4 h-4" />
+        </Button>
         <Button 
           variant="ghost" 
           size="icon" 
