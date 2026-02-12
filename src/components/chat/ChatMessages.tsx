@@ -297,7 +297,7 @@ export function ChatMessages({ mensagens, isLoading, onEnviarSugestao, modo = "l
             >
               {mensagem.conteudo ? (
                 mensagem.remetente_ia ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-serif prose-h1:text-lg prose-h1:font-bold prose-h1:mb-6 prose-h2:text-base prose-h2:font-bold prose-h2:my-6 prose-h3:text-base prose-h3:font-bold prose-h3:my-6 prose-p:text-sm prose-p:my-5 prose-ul:my-5 prose-ol:my-5 prose-li:my-2">
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-serif prose-headings:uppercase prose-headings:tracking-wider prose-h1:text-lg prose-h1:font-bold prose-h1:mb-8 prose-h1:mt-2 prose-h2:text-base prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-base prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:text-sm prose-p:my-6 prose-p:leading-relaxed prose-ul:my-6 prose-ol:my-6 prose-li:my-2 prose-li:leading-relaxed">
                     <ReactMarkdown>{mensagem.conteudo}</ReactMarkdown>
                   </div>
                 ) : (
