@@ -1,59 +1,75 @@
 
+## Indicadores Avancados de Uso e Comportamento
 
-## Gestao de Administradores e Recuperacao de Acesso
+A ideia e manter a visao geral simples (cards + graficos atuais) e adicionar indicadores de comportamento mais ricos, com possibilidade de expandir detalhes sob demanda.
 
-Tres funcionalidades serao adicionadas ao painel administrativo:
+### O que sera adicionado
 
-### 1. Promover/Remover Administradores
+**1. Cards com indicadores extras (Visao Geral)**
 
-Na aba "Usuarios" da tabela existente, cada usuario tera um botao para promover a admin ou remover a role admin. O admin atual nao podera remover a si mesmo se for o unico admin (protecao contra ficar sem acesso).
+Alem dos 4 cards atuais (Usuarios, Conversas, Mensagens, Feedbacks), adicionar uma segunda fileira com metricas comportamentais:
 
-**Componente novo:** `AdminRoleToggle` -- um botao/badge na tabela de usuarios que mostra a role atual e permite alternar.
+- **Media de mensagens por conversa** -- indica profundidade de engajamento
+- **Usuarios ativos (ultimos 7 dias)** -- quantos usuarios usaram a plataforma recentemente
+- **Modo mais popular** -- qual modo de chat e mais utilizado
+- **Taxa de retorno** -- % de usuarios com mais de 1 conversa (indica retencao)
 
-**Backend:** Novas actions `grant-admin` e `revoke-admin` na edge function `admin-users`, que inserem/removem registros na tabela `user_roles`. Incluira validacao para impedir que o ultimo admin se remova.
+Esses cards terao visual mais discreto (menores, cor secundaria) para diferenciar dos totais principais.
 
-### 2. Alterar Email do Administrador
+**2. Grafico de linha: Usuarios ativos por dia**
 
-Na aba "Usuarios" ou em uma secao de configuracoes, o admin podera alterar seu proprio email. Isso usara `supabase.auth.admin.updateUserById()` na edge function.
+Um novo grafico de linha (LineChart) mostrando quantos usuarios distintos criaram conversas por dia nos ultimos 30 dias. Complementa o grafico de barras existente (conversas/dia) ao revelar se o volume vem de muitos usuarios ou poucos usuarios repetidos.
 
-**Backend:** Nova action `update-email` na edge function `admin-users`.
+**3. Tabela de detalhamento por usuario (expandivel)**
 
-**Frontend:** Dialogo simples com campo de novo email, acessivel via botao na area do perfil admin ou na tabela.
+Na aba "Usuarios", ao lado de cada usuario, mostrar colunas extras:
+- **Conversas** -- total de conversas do usuario
+- **Mensagens** -- total de mensagens
+- **Ultimo uso** -- data da ultima conversa
+- **Modo favorito** -- modo mais usado pelo usuario
 
-### 3. Recuperacao de Acesso
+Isso permite identificar rapidamente quem sao os usuarios mais engajados e quais modos cada um prefere.
 
-Um mecanismo de seguranca para o caso de perder acesso admin:
+**4. Filtro de periodo na Visao Geral**
 
-- **Via email de recuperacao:** O admin podera solicitar um email de redefinicao de senha (ja existe no sistema via pagina de perfil).
-- **Email de recuperacao de admin:** Uma nova funcionalidade que permite ao admin cadastrar um "email de recuperacao" salvo na tabela `admin_recovery`. Caso perca acesso, podera usar esse email para solicitar restauracao da role admin via uma edge function dedicada.
+Adicionar um seletor de periodo (7 dias, 30 dias, 90 dias, Tudo) na aba Visao Geral para que os graficos e metricas comportamentais respondam ao periodo selecionado.
 
 ---
 
 ### Detalhes tecnicos
 
-**Migracao SQL:**
-- Criar tabela `admin_recovery` com campos `id`, `user_id` (FK para auth.users), `recovery_email`, `created_at`, com RLS habilitado.
+**Edge function `admin-stats/index.ts`:**
 
-**Edge function `admin-users` -- novas actions:**
+Adicionar ao response:
+- `mensagensPorConversa`: media (totalMensagens / totalConversas)
+- `usuariosAtivos7d`: count distinct de `usuario_criador` em conversas dos ultimos 7 dias
+- `modoMaisPopular`: modo com maior contagem
+- `taxaRetorno`: % de usuarios com mais de 1 conversa
+- `usuariosAtivosPorDia`: agrupamento de usuarios distintos por dia (ultimos 30 dias)
+- `statsPorUsuario`: para cada usuario, total de conversas, mensagens, ultimo uso e modo favorito
+
+Aceitar query param `periodo` (7d, 30d, 90d, all) para filtrar os dados temporais.
+
+**Novos/alterados componentes frontend:**
+
+- `src/components/admin/BehaviorCards.tsx` (novo) -- segunda fileira de cards com metricas comportamentais
+- `src/components/admin/UsageCharts.tsx` (alterado) -- adicionar grafico de linha de usuarios ativos/dia
+- `src/components/admin/StatsCards.tsx` -- sem alteracao (mantem os totais simples)
+- `src/components/admin/UsersTable.tsx` (alterado) -- adicionar colunas de conversas, mensagens, ultimo uso e modo favorito
+- `src/pages/AdminDashboard.tsx` (alterado) -- adicionar seletor de periodo e o novo componente BehaviorCards
+
+**Fluxo de dados:**
 
 ```text
-grant-admin:   INSERT INTO user_roles (user_id, role) VALUES (targetId, 'admin')
-revoke-admin:  DELETE FROM user_roles WHERE user_id = targetId AND role = 'admin'
-               (bloquear se count de admins = 1)
-update-email:  supabase.auth.admin.updateUserById(userId, { email: newEmail })
-set-recovery:  INSERT/UPDATE admin_recovery com email de recuperacao
+AdminDashboard
+  |-- [periodo state: 7d | 30d | 90d | all]
+  |-- fetchStats(periodo) --> admin-stats edge function
+  |
+  |-- Visao Geral tab
+  |     |-- StatsCards (totais simples)
+  |     |-- BehaviorCards (metricas comportamentais)
+  |     |-- UsageCharts (barras + pizza + linha usuarios ativos)
+  |
+  |-- Usuarios tab
+        |-- UsersTable (com colunas extras por usuario)
 ```
-
-**Novos componentes frontend:**
-
-- `src/components/admin/AdminRoleToggle.tsx` -- badge clicavel na tabela de usuarios
-- `src/components/admin/ChangeEmailDialog.tsx` -- dialogo para alterar email
-- `src/components/admin/RecoveryEmailDialog.tsx` -- dialogo para cadastrar email de recuperacao
-
-**Alteracoes em arquivos existentes:**
-
-- `src/components/admin/UsersTable.tsx` -- adicionar coluna "Role" com badge admin/user e botao de toggle
-- `src/pages/AdminDashboard.tsx` -- adicionar botao de configuracoes no header (alterar email e email de recuperacao)
-- `supabase/functions/admin-users/index.ts` -- adicionar as 4 novas actions
-- `supabase/functions/admin-stats/index.ts` -- incluir role de cada usuario nos dados retornados
-
