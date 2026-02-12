@@ -9,12 +9,24 @@ import { ImportUsersDialog } from "./ImportUsersDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
 import { AdminRoleToggle } from "./AdminRoleToggle";
 
+const MODO_LABELS: Record<string, string> = {
+  livre: "Livre",
+  mensagem: "Mensagem",
+  exegese: "Exegese",
+  devocional: "Devocional",
+  academico: "Acadêmico",
+};
+
 interface User {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
   is_admin?: boolean;
+  conversas?: number;
+  mensagens?: number;
+  ultimoUso?: string | null;
+  modoFavorito?: string;
 }
 
 interface UsersTableProps {
@@ -29,11 +41,11 @@ export function UsersTable({ usuarios, onRefresh }: UsersTableProps) {
   const [deleteUser, setDeleteUser] = useState<{ id: string; email: string } | null>(null);
 
   const exportCSV = () => {
-    const header = "Email,Role,Data de Cadastro,Último Login\n";
+    const header = "Email,Role,Cadastro,Último Login,Conversas,Mensagens,Último Uso,Modo Favorito\n";
     const rows = usuarios
       .map(
         (u) =>
-          `${u.email},${u.is_admin ? "Admin" : "Usuário"},${new Date(u.created_at).toLocaleDateString("pt-BR")},${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}`
+          `${u.email},${u.is_admin ? "Admin" : "Usuário"},${new Date(u.created_at).toLocaleDateString("pt-BR")},${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"},${u.conversas ?? 0},${u.mensagens ?? 0},${u.ultimoUso ? new Date(u.ultimoUso).toLocaleDateString("pt-BR") : "-"},${MODO_LABELS[u.modoFavorito || ""] || u.modoFavorito || "-"}`
       )
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
@@ -63,48 +75,54 @@ export function UsersTable({ usuarios, onRefresh }: UsersTableProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Cadastro</TableHead>
-                <TableHead>Último Login</TableHead>
-                <TableHead className="w-16">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {usuarios.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.email}</TableCell>
-                  <TableCell>
-                    <AdminRoleToggle
-                      userId={u.id}
-                      email={u.email}
-                      isAdmin={!!u.is_admin}
-                      onToggled={handleRefresh}
-                    />
-                  </TableCell>
-                  <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
-                  <TableCell>
-                    {u.last_sign_in_at
-                      ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR")
-                      : "Nunca"}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => { setDeleteUser({ id: u.id, email: u.email }); setDeleteOpen(true); }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="text-center">Conversas</TableHead>
+                  <TableHead className="text-center">Msgs</TableHead>
+                  <TableHead>Modo favorito</TableHead>
+                  <TableHead>Último uso</TableHead>
+                  <TableHead>Cadastro</TableHead>
+                  <TableHead className="w-16">Ações</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {usuarios.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.email}</TableCell>
+                    <TableCell>
+                      <AdminRoleToggle
+                        userId={u.id}
+                        email={u.email}
+                        isAdmin={!!u.is_admin}
+                        onToggled={handleRefresh}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">{u.conversas ?? 0}</TableCell>
+                    <TableCell className="text-center">{u.mensagens ?? 0}</TableCell>
+                    <TableCell>{MODO_LABELS[u.modoFavorito || ""] || u.modoFavorito || "-"}</TableCell>
+                    <TableCell>
+                      {u.ultimoUso ? new Date(u.ultimoUso).toLocaleDateString("pt-BR") : "-"}
+                    </TableCell>
+                    <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => { setDeleteUser({ id: u.id, email: u.email }); setDeleteOpen(true); }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 

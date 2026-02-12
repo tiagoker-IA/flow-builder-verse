@@ -5,13 +5,15 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatsCards } from "@/components/admin/StatsCards";
+import { BehaviorCards } from "@/components/admin/BehaviorCards";
 import { UsageCharts } from "@/components/admin/UsageCharts";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { FeedbacksTable } from "@/components/admin/FeedbacksTable";
 import { CampaignForm } from "@/components/admin/CampaignForm";
 import { CampaignList } from "@/components/admin/CampaignList";
-import { ArrowLeft, Loader2, RefreshCw, Sparkles, Settings } from "lucide-react";
+import { ArrowLeft, RefreshCw, Sparkles, Settings } from "lucide-react";
 import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ChangeEmailDialog } from "@/components/admin/ChangeEmailDialog";
@@ -28,7 +30,14 @@ interface AdminStats {
   conversasPorDia: Record<string, number>;
   feedbacks: any[];
   usuarios: any[];
+  mensagensPorConversa: number;
+  usuariosAtivos7d: number;
+  modoMaisPopular: string;
+  taxaRetorno: number;
+  usuariosAtivosPorDia: Record<string, number>;
 }
+
+type Periodo = "7d" | "30d" | "90d" | "all";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -37,24 +46,30 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [periodo, setPeriodo] = useState<Periodo>("30d");
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (p: Periodo = periodo) => {
     setLoadingStats(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await supabase.functions.invoke("admin-stats", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-stats?periodo=${p}`;
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
       });
-      if (res.error) throw res.error;
-      setStats(res.data);
+      if (!response.ok) throw new Error("Erro ao carregar estatísticas");
+      const data = await response.json();
+      setStats(data);
     } catch (err: any) {
       toast({ title: "Erro ao carregar estatísticas", description: err.message, variant: "destructive" });
     } finally {
       setLoadingStats(false);
     }
-  }, []);
+  }, [periodo]);
 
   const fetchCampaigns = useCallback(async () => {
     const { data } = await supabase.from("email_campaigns" as any).select("*").order("created_at", { ascending: false });
@@ -71,10 +86,10 @@ export default function AdminDashboard() {
       return;
     }
     if (isAdmin) {
-      fetchStats();
+      fetchStats(periodo);
       fetchCampaigns();
     }
-  }, [user, authLoading, isAdmin, adminLoading, navigate, fetchStats, fetchCampaigns]);
+  }, [user, authLoading, isAdmin, adminLoading, navigate, periodo]);
 
   if (authLoading || adminLoading || loadingStats) {
     return <AdminSkeleton />;
@@ -97,7 +112,7 @@ export default function AdminDashboard() {
             <h1 className="font-serif text-xl sm:text-2xl font-medium tracking-tight">Painel Administrativo</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { fetchStats(); fetchCampaigns(); }}>
+            <Button variant="outline" size="sm" onClick={() => { fetchStats(periodo); fetchCampaigns(); }}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
             </Button>
@@ -132,20 +147,41 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-muted-foreground">Período dos indicadores</h2>
+              <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">7 dias</SelectItem>
+                  <SelectItem value="30d">30 dias</SelectItem>
+                  <SelectItem value="90d">90 dias</SelectItem>
+                  <SelectItem value="all">Tudo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <StatsCards
               totalUsuarios={stats.totalUsuarios}
               totalConversas={stats.totalConversas}
               totalMensagens={stats.totalMensagens}
               totalFeedbacks={stats.totalFeedbacks}
             />
+            <BehaviorCards
+              mensagensPorConversa={stats.mensagensPorConversa}
+              usuariosAtivos7d={stats.usuariosAtivos7d}
+              modoMaisPopular={stats.modoMaisPopular}
+              taxaRetorno={stats.taxaRetorno}
+            />
             <UsageCharts
               conversasPorDia={stats.conversasPorDia}
               conversasPorModo={stats.conversasPorModo}
+              usuariosAtivosPorDia={stats.usuariosAtivosPorDia}
             />
           </TabsContent>
 
           <TabsContent value="users">
-            <UsersTable usuarios={stats.usuarios} onRefresh={() => { fetchStats(); }} />
+            <UsersTable usuarios={stats.usuarios} onRefresh={() => { fetchStats(periodo); }} />
           </TabsContent>
 
           <TabsContent value="feedbacks">
