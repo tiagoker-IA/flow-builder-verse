@@ -51,6 +51,7 @@ Deno.serve(async (req) => {
 
     const { action, ...payload } = await req.json();
 
+    // ===== CREATE USER =====
     if (action === "create") {
       const { email, password } = payload;
       if (!email || !password) {
@@ -75,6 +76,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ===== BULK CREATE =====
     if (action === "bulk-create") {
       const { users } = payload as { users: { email: string; password: string }[] };
       if (!users || !Array.isArray(users) || users.length === 0) {
@@ -103,6 +105,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ===== DELETE USER =====
     if (action === "delete") {
       const { userId } = payload;
       if (!userId) {
@@ -119,6 +122,153 @@ Deno.serve(async (req) => {
         });
       }
       return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ===== GRANT ADMIN =====
+    if (action === "grant-admin") {
+      const { targetUserId } = payload;
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: "targetUserId é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Check if already admin
+      const { data: existing } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", targetUserId)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (existing) {
+        return new Response(JSON.stringify({ error: "Usuário já é admin" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: targetUserId, role: "admin" });
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ===== REVOKE ADMIN =====
+    if (action === "revoke-admin") {
+      const { targetUserId } = payload;
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: "targetUserId é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Count total admins
+      const { count } = await supabase
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      if ((count ?? 0) <= 1) {
+        return new Response(JSON.stringify({ error: "Não é possível remover o último administrador" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", targetUserId)
+        .eq("role", "admin");
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ===== UPDATE EMAIL =====
+    if (action === "update-email") {
+      const { newEmail } = payload;
+      if (!newEmail) {
+        return new Response(JSON.stringify({ error: "Novo email é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { error } = await supabase.auth.admin.updateUserById(user.id, { email: newEmail });
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ===== SET RECOVERY EMAIL =====
+    if (action === "set-recovery") {
+      const { recoveryEmail } = payload;
+      if (!recoveryEmail) {
+        return new Response(JSON.stringify({ error: "Email de recuperação é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Upsert recovery email
+      const { data: existing } = await supabase
+        .from("admin_recovery")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existing) {
+        const { error } = await supabase
+          .from("admin_recovery")
+          .update({ recovery_email: recoveryEmail })
+          .eq("user_id", user.id);
+        if (error) {
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        const { error } = await supabase
+          .from("admin_recovery")
+          .insert({ user_id: user.id, recovery_email: recoveryEmail });
+        if (error) {
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ===== GET RECOVERY EMAIL =====
+    if (action === "get-recovery") {
+      const { data } = await supabase
+        .from("admin_recovery")
+        .select("recovery_email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return new Response(JSON.stringify({ recoveryEmail: data?.recovery_email || null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
