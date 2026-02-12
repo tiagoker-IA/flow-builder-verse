@@ -95,6 +95,20 @@ serve(async (req) => {
       );
     }
 
+    // Check cooldown: prevent sending more than 1 campaign per hour
+    const { data: recentCampaigns } = await supabaseAdmin
+      .from("email_campaigns")
+      .select("id")
+      .eq("status", "enviada")
+      .gte("sent_at", new Date(Date.now() - 3600000).toISOString());
+
+    if (recentCampaigns && recentCampaigns.length > 0) {
+      return new Response(
+        JSON.stringify({ error: "Aguarde pelo menos 1 hora entre envios de campanhas." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get all users
     const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
     const emails = (usersData?.users || []).map((u: any) => u.email).filter(Boolean);
@@ -105,29 +119,46 @@ serve(async (req) => {
       .update({ status: "enviando", total_destinatarios: emails.length })
       .eq("id", campaignId);
 
-    // Send emails via Resend
+    // Send emails via Resend in batches with rate limiting
+    const BATCH_SIZE = 50;
+    const DELAY_MS = 2000;
     let enviados = 0;
     try {
-      for (const email of emails) {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: Deno.env.get("RESEND_FROM_EMAIL") || "noreply@example.com",
-            to: [email],
-            subject: campaign.assunto,
-            html: campaign.conteudo_html,
-          }),
-        });
+      for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+        const batch = emails.slice(i, i + BATCH_SIZE);
 
-        if (res.ok) {
-          enviados++;
-        } else {
-          const errorText = await res.text();
-          console.error(`Failed to send to ${email}:`, errorText);
+        await Promise.all(batch.map(async (email: string) => {
+          const res = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: Deno.env.get("RESEND_FROM_EMAIL") || "noreply@example.com",
+              to: [email],
+              subject: campaign.assunto,
+              html: campaign.conteudo_html,
+            }),
+          });
+
+          if (res.ok) {
+            enviados++;
+          } else {
+            const errorText = await res.text();
+            console.error(`Failed to send to ${email}:`, errorText);
+          }
+        }));
+
+        // Update progress after each batch
+        await supabaseAdmin
+          .from("email_campaigns")
+          .update({ enviados_count: enviados })
+          .eq("id", campaignId);
+
+        // Rate limit between batches
+        if (i + BATCH_SIZE < emails.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_MS));
         }
       }
 
