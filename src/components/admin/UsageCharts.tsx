@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface UsageChartsProps {
   conversasPorDia: Record<string, number>;
   conversasPorModo: Record<string, number>;
+  usuariosAtivosPorDia?: Record<string, number>;
 }
 
 const MODO_LABELS: Record<string, string> = {
@@ -22,7 +23,14 @@ const COLORS = [
   "hsl(43, 95%, 28%)",
 ];
 
-export function UsageCharts({ conversasPorDia, conversasPorModo }: UsageChartsProps) {
+const tooltipStyle = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  color: "hsl(var(--foreground))",
+};
+
+export function UsageCharts({ conversasPorDia, conversasPorModo, usuariosAtivosPorDia }: UsageChartsProps) {
   const barData = Object.entries(conversasPorDia)
     .slice(-14)
     .map(([date, count]) => ({
@@ -35,11 +43,20 @@ export function UsageCharts({ conversasPorDia, conversasPorModo }: UsageChartsPr
     value: count,
   }));
 
+  const lineData = usuariosAtivosPorDia
+    ? Object.entries(usuariosAtivosPorDia)
+        .slice(-14)
+        .map(([date, count]) => ({
+          date: new Date(date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+          usuarios: count,
+        }))
+    : [];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Conversas por dia (últimos 14 dias)</CardTitle>
+          <CardTitle className="text-base">Conversas por dia</CardTitle>
         </CardHeader>
         <CardContent>
           {barData.length > 0 ? (
@@ -48,14 +65,7 @@ export function UsageCharts({ conversasPorDia, conversasPorModo }: UsageChartsPr
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="date" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="conversas" fill="hsl(43, 91%, 38%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -78,14 +88,7 @@ export function UsageCharts({ conversasPorDia, conversasPorModo }: UsageChartsPr
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
+                <Tooltip contentStyle={tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
@@ -93,6 +96,25 @@ export function UsageCharts({ conversasPorDia, conversasPorModo }: UsageChartsPr
           )}
         </CardContent>
       </Card>
+
+      {lineData.length > 0 && (
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Usuários ativos por dia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={lineData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Line type="monotone" dataKey="usuarios" stroke="hsl(215, 28%, 40%)" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
