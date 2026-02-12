@@ -184,4 +184,39 @@
   .theme-transition {
     @apply transition-colors duration-300 ease-in-out;
   }
+
+  /* Forçar espaçamento em mensagens da IA */
+  .ai-message-content p {
+    margin-top: 1em !important;
+    margin-bottom: 1em !important;
+    line-height: 1.7 !important;
+  }
+
+  .ai-message-content h1,
+  .ai-message-content h2 {
+    margin-top: 1.8em !important;
+    margin-bottom: 0.6em !important;
+  }
+
+  .ai-message-content h3 {
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+  }
+
+  .ai-message-content ul,
+  .ai-message-content ol {
+    margin-top: 1em !important;
+    margin-bottom: 1em !important;
+  }
+
+  .ai-message-content li {
+    margin-top: 0.4em !important;
+    margin-bottom: 0.4em !important;
+  }
+
+  .ai-message-content h1:first-child,
+  .ai-message-content h2:first-child,
+  .ai-message-content h3:first-child {
+    margin-top: 0 !important;
+  }
 }
