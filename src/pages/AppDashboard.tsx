@@ -9,7 +9,7 @@ import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModoSelector } from "@/components/chat/ModoSelector";
 import { ProgressIndicator } from "@/components/chat/ProgressIndicator";
-import { GruposDashboard } from "@/components/grupos/GruposDashboard";
+
 import { ChatMode } from "@/types/chat";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -117,33 +117,27 @@ export default function AppDashboard() {
           mensagens={mensagens}
         />
         
-        {modo === "grupo_pequeno" && !conversaAtual ? (
-          <GruposDashboard />
-        ) : (
-          <>
-            {/* Mobile mode selector */}
-            <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
-              <ModoSelector modo={modo} onModoChange={setModo} />
-            </div>
-            
-            {/* Progress indicator for message mode */}
-            <ProgressIndicator 
-              mensagens={mensagens} 
-              modo={conversaAtual?.modo || modo} 
-            />
-            
-            <ChatMessages 
-              mensagens={mensagens} 
-              isLoading={isSending} 
-              onEnviarSugestao={handleEnviarMensagem}
-              modo={conversaAtual?.modo as ChatMode || modo}
-            />
-            <ChatInput 
-              onEnviar={handleEnviarMensagem} 
-              isLoading={isSending}
-            />
-          </>
-        )}
+        {/* Mobile mode selector */}
+          <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
+            <ModoSelector modo={modo} onModoChange={setModo} />
+          </div>
+          
+          {/* Progress indicator for message mode */}
+          <ProgressIndicator 
+            mensagens={mensagens} 
+            modo={conversaAtual?.modo || modo} 
+          />
+          
+          <ChatMessages 
+            mensagens={mensagens} 
+            isLoading={isSending} 
+            onEnviarSugestao={handleEnviarMensagem}
+            modo={conversaAtual?.modo as ChatMode || modo}
+          />
+          <ChatInput 
+            onEnviar={handleEnviarMensagem} 
+            isLoading={isSending}
+          />
       </div>
     </div>
   );
