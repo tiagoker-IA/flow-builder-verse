@@ -11,8 +11,11 @@ interface ImportUsersDialogProps {
   onCreated: () => void;
 }
 
-function generatePassword() {
-  return Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-4).toUpperCase() + "!1";
+function generatePassword(): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => charset[byte % charset.length]).join('');
 }
 
 export function ImportUsersDialog({ open, onOpenChange, onCreated }: ImportUsersDialogProps) {
