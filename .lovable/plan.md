@@ -1,65 +1,63 @@
 
 
-## Simplificar Grupos Pequenos: Chat-based com formatacao rica
+## Tornar o primeiro usuario admin automaticamente
 
-A ideia central e remover o dashboard complexo e tratar o modo "Grupo Pequeno" exatamente como os demais modos: uma conversa com a IA na interface de chat, com historico na barra lateral esquerda.
+Como voce e o unico usuario cadastrado e a tabela `user_roles` esta vazia, a solucao mais simples e segura e criar um **trigger no banco de dados** que atribui a role `admin` automaticamente ao primeiro usuario que se cadastrar. Para usuarios subsequentes, a role padrao sera `user`.
+
+Alem disso, como ja existe um usuario cadastrado (tiagoker@gmail.com) sem role, o trigger nao se aplica retroativamente. Entao a migracao tambem incluira um **INSERT direto** para conceder admin ao usuario atual.
 
 ---
 
-### Mudanca 1: Remover GruposDashboard do AppDashboard
+### Mudanca 1: Migracao SQL
+
+Criar uma migracao que:
+
+1. **Insere a role admin para o usuario atual** (tiagoker@gmail.com), resolvendo o problema imediato
+2. **Cria uma funcao + trigger** que, ao inserir um novo usuario em `auth.users`, verifica se a tabela `user_roles` esta vazia. Se estiver, atribui `admin`; caso contrario, atribui `user`
+
+```sql
+-- Conceder admin ao usuario existente
+INSERT INTO public.user_roles (user_id, role)
+VALUES ('cdf1cf04-0610-409b-83fe-4e008f1c491d', 'admin');
+
+-- Funcao para auto-atribuir role
+CREATE OR REPLACE FUNCTION public.handle_new_user_role()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.user_roles) THEN
+    INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'admin');
+  ELSE
+    INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'user');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger na criacao de usuario
+CREATE TRIGGER on_auth_user_created_role
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_role();
+```
+
+---
+
+### Mudanca 2: Adicionar link visivel para o painel admin
 
 **Arquivo:** `src/pages/AppDashboard.tsx`
 
-Remover a condicional que renderiza `<GruposDashboard />` quando `modo === "grupo_pequeno"`. O modo Grupo Pequeno passara a usar o mesmo fluxo de chat das outras modalidades (ChatMessages + ChatInput).
+Alem do icone no header do chat, adicionar um link/botao mais visivel no layout principal (por exemplo, na sidebar ou como um banner discreto) para que admins encontrem facilmente o painel administrativo.
 
 ---
 
-### Mudanca 2: Reescrever o system prompt do modo `grupo_pequeno`
+### Resumo
 
-**Arquivo:** `supabase/functions/chat/index.ts`
-
-O prompt sera atualizado para:
-
-- **Formatacao rica obrigatoria:** instrucoes explicitas para usar espacamento entre paragrafos, bullets, **negrito** nos titulos de secao e *italico* nas citacoes biblicas literais
-- **Exaltacao simplificada:** em vez de sugerir nomes de musicas, trazer um versiculo conectado ao tema do dia + dicas para o lider escolher canticos adequados. Oferecer ajuda caso o usuario queira sugestoes especificas
-- **Fluxo guiado:** a IA conduz o planejamento da reuniao etapa por etapa (Encontro -> Exaltacao -> Edificacao -> Envio), perguntando ao usuario antes de avancar
-- **Tom pratico e acolhedor:** linguagem acessivel para lideres de celula
-
----
-
-### Mudanca 3: Melhorar regras globais de formatacao
-
-**Arquivo:** `supabase/functions/chat/index.ts`
-
-Atualizar o bloco `INTERACTION_RULES` para incluir instrucoes de formatacao mais claras que se apliquem a todos os modos:
-
-- Usar espacamento entre paragrafos (linha em branco)
-- Usar bullets para listas
-- **Negrito** em titulos e destaques
-- *Italico* em citacoes biblicas literais
-- Estrutura visual limpa e organizada
-
----
-
-### Mudanca 4: Atualizar sugestoes iniciais
-
-**Arquivo:** `src/components/chat/ChatMessages.tsx`
-
-Ajustar as sugestoes do modo `grupo_pequeno` para refletir o novo fluxo conversacional:
-
-- "Planejar reuniao sobre [tema]"
-- "Preciso de um quebra-gelo criativo"
-- "Me ajude com o estudo de [passagem]"
-
----
-
-### Resumo tecnico
-
-| Arquivo | Acao |
+| Acao | Detalhe |
 |---|---|
-| `src/pages/AppDashboard.tsx` | Remover condicional do GruposDashboard, remover import |
-| `supabase/functions/chat/index.ts` | Reescrever prompt grupo_pequeno + melhorar INTERACTION_RULES |
-| `src/components/chat/ChatMessages.tsx` | Ajustar sugestoes iniciais do modo grupo_pequeno |
+| Migracao SQL | Inserir role admin para usuario atual + trigger para novos usuarios |
+| AppDashboard | Tornar acesso ao admin mais visivel na interface |
 
-Os componentes em `src/components/grupos/` e os hooks (`useGrupos`, `useReunioes`, `useMembros`) permanecem no projeto para uso futuro, mas nao serao referenciados no fluxo principal por enquanto.
-
+Apos a migracao, basta recarregar a pagina `/app` e o icone de escudo aparecera no header do chat, levando ao painel administrativo em `/admin`.
