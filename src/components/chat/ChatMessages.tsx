@@ -204,9 +204,9 @@ const SUGESTOES_POR_MODO: Record<ChatMode, string[]> = {
     "Meditação no Salmo 91",
   ],
   grupo_pequeno: [
-    "Planeje uma reunião sobre ansiedade",
-    "Sugira quebra-gelos criativos",
-    "Crie perguntas para Filipenses 4:6-7",
+    "Planejar reunião sobre gratidão",
+    "Preciso de um quebra-gelo criativo",
+    "Me ajude com o estudo de Romanos 12",
   ],
   livre: [
     "O que é graça?",
