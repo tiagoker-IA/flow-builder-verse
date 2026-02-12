@@ -1,59 +1,59 @@
 
 
-## Corrigir espaçamento entre parágrafos nas respostas da IA
+## Gestao de Administradores e Recuperacao de Acesso
 
-O problema principal é que as classes do Tailwind Typography (`prose-p:my-6`) estão sendo sobrescritas pelo `prose-sm`, e a IA muitas vezes não insere quebras de parágrafo duplas no markdown. Isso faz com que o ReactMarkdown trate tudo como um único bloco de texto.
+Tres funcionalidades serao adicionadas ao painel administrativo:
 
-### Mudança 1: Pós-processar o markdown antes de renderizar
+### 1. Promover/Remover Administradores
 
-**Arquivo:** `src/components/chat/ChatMessages.tsx`
+Na aba "Usuarios" da tabela existente, cada usuario tera um botao para promover a admin ou remover a role admin. O admin atual nao podera remover a si mesmo se for o unico admin (protecao contra ficar sem acesso).
 
-Criar uma função que processa o texto markdown antes de passar ao ReactMarkdown, garantindo que:
-- Linhas que terminam sem pontuação de lista e começam com letra maiúscula sejam separadas por linha em branco
-- Blocos como "Sugestão:", "Exemplos:", "Incentive" etc. fiquem em parágrafos distintos
+**Componente novo:** `AdminRoleToggle` -- um botao/badge na tabela de usuarios que mostra a role atual e permite alternar.
 
-### Mudança 2: Adicionar CSS customizado para forçar espaçamento
+**Backend:** Novas actions `grant-admin` e `revoke-admin` na edge function `admin-users`, que inserem/removem registros na tabela `user_roles`. Incluira validacao para impedir que o ultimo admin se remova.
 
-**Arquivo:** `src/index.css`
+### 2. Alterar Email do Administrador
 
-Adicionar regras CSS específicas para o container de mensagens da IA que sobreponham o `prose-sm`:
+Na aba "Usuarios" ou em uma secao de configuracoes, o admin podera alterar seu proprio email. Isso usara `supabase.auth.admin.updateUserById()` na edge function.
 
-- Parágrafos (`p`) com margem superior e inferior de pelo menos `1em`
-- Títulos (`h1, h2, h3`) com margem superior generosa (`1.5em`) e borda ou espaço extra
-- Listas (`ul, ol`) com margem superior de `1em`
+**Backend:** Nova action `update-email` na edge function `admin-users`.
 
-Isso garante que, independentemente do Tailwind, o espaçamento visual seja consistente.
+**Frontend:** Dialogo simples com campo de novo email, acessivel via botao na area do perfil admin ou na tabela.
 
-### Mudança 3: Reforçar instrução no prompt do sistema
+### 3. Recuperacao de Acesso
 
-**Arquivo:** `supabase/functions/chat/index.ts`
+Um mecanismo de seguranca para o caso de perder acesso admin:
 
-Tornar a instrução de formatação mais explícita e enfática:
-- Adicionar exemplo concreto de como o texto deve ser formatado (com linhas em branco visíveis)
-- Instruir a IA a usar `\n\n` (duas quebras de linha) entre cada bloco de conteúdo
+- **Via email de recuperacao:** O admin podera solicitar um email de redefinicao de senha (ja existe no sistema via pagina de perfil).
+- **Email de recuperacao de admin:** Uma nova funcionalidade que permite ao admin cadastrar um "email de recuperacao" salvo na tabela `admin_recovery`. Caso perca acesso, podera usar esse email para solicitar restauracao da role admin via uma edge function dedicada.
 
 ---
 
-### Detalhes técnicos
+### Detalhes tecnicos
 
-**ChatMessages.tsx:** Criar função `preprocessMarkdown(text: string): string` que insere `\n\n` antes de frases que começam com letra maiúscula após ponto final, garantindo que o ReactMarkdown interprete cada frase longa como parágrafo separado.
+**Migracao SQL:**
+- Criar tabela `admin_recovery` com campos `id`, `user_id` (FK para auth.users), `recovery_email`, `created_at`, com RLS habilitado.
 
-**index.css:** Adicionar bloco:
-```css
-.prose.prose-sm p {
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
-.prose.prose-sm h2, .prose.prose-sm h3 {
-  margin-top: 1.8em;
-}
+**Edge function `admin-users` -- novas actions:**
+
+```text
+grant-admin:   INSERT INTO user_roles (user_id, role) VALUES (targetId, 'admin')
+revoke-admin:  DELETE FROM user_roles WHERE user_id = targetId AND role = 'admin'
+               (bloquear se count de admins = 1)
+update-email:  supabase.auth.admin.updateUserById(userId, { email: newEmail })
+set-recovery:  INSERT/UPDATE admin_recovery com email de recuperacao
 ```
 
-**chat/index.ts:** Adicionar na seção de formatação obrigatória:
-```
-- CRÍTICO: Sempre use DUAS quebras de linha (linha em branco) entre parágrafos. Exemplo:
-  Primeiro parágrafo aqui.
+**Novos componentes frontend:**
 
-  Segundo parágrafo aqui.
-- Nunca escreva dois parágrafos na mesma linha separados apenas por espaço.
-```
+- `src/components/admin/AdminRoleToggle.tsx` -- badge clicavel na tabela de usuarios
+- `src/components/admin/ChangeEmailDialog.tsx` -- dialogo para alterar email
+- `src/components/admin/RecoveryEmailDialog.tsx` -- dialogo para cadastrar email de recuperacao
+
+**Alteracoes em arquivos existentes:**
+
+- `src/components/admin/UsersTable.tsx` -- adicionar coluna "Role" com badge admin/user e botao de toggle
+- `src/pages/AdminDashboard.tsx` -- adicionar botao de configuracoes no header (alterar email e email de recuperacao)
+- `supabase/functions/admin-users/index.ts` -- adicionar as 4 novas actions
+- `supabase/functions/admin-stats/index.ts` -- incluir role de cada usuario nos dados retornados
+
