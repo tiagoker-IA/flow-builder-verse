@@ -1,150 +1,65 @@
 
 
-## Transformacao: Modo Academico -> Grupos Pequenos (4Es)
+## Simplificar Grupos Pequenos: Chat-based com formatacao rica
 
-Este plano cobre a implementacao completa da funcionalidade de Grupos Pequenos, substituindo o modo "academico" no seletor de modos do chat.
-
----
-
-### Fase 1: Banco de Dados (12 tabelas + RLS)
-
-Criar todas as tabelas necessarias via migracoes SQL:
-
-**Tabelas principais:**
-1. `grupos_pequenos` - id, nome, lider_id (uuid), dia_semana, horario, local, created_at
-2. `membros_grupo` - id, grupo_id (FK), user_id (uuid), papel (enum: lider/vice_lider/membro), data_entrada, ativo
-3. `reunioes` - id, grupo_id (FK), data_reuniao, tema_geral, status (enum: planejada/em_andamento/concluida), created_at
-
-**Tabelas dos 4Es:**
-4. `encontro` - id, reuniao_id (FK), titulo, instrucoes, duracao_minutos, relacionado_tema
-5. `exaltacao` - id, reuniao_id (FK), duracao_minutos, notas_lider
-6. `musicas_exaltacao` - id, exaltacao_id (FK), titulo, artista, link_video, executada
-7. `edificacao` - id, reuniao_id (FK), referencia_biblica, texto_completo, contexto_historico, tema_principal
-8. `perguntas_edificacao` - id, edificacao_id (FK), ordem, texto_pergunta, tipo (enum: reflexiva/testemunhal/aplicacao/comunitaria)
-9. `respostas_perguntas` - id, pergunta_id (FK), membro_id (FK), resposta_texto, tipo_partilha
-10. `envio` - id, reuniao_id (FK), desafio_texto, tipo (enum: individual/coletivo/ambos)
-11. `compromissos_envio` - id, envio_id (FK), membro_id (FK), comprometeu, cumprido, testemunho_resultado
-12. `presencas` - id, reuniao_id (FK), membro_id (FK), presente
-
-**Tabela auxiliar:**
-13. `quebragelos_favoritos` - id, user_id, titulo, instrucoes, tags
-
-**RLS:**
-- Membros so veem dados do seu grupo (via subquery em membros_grupo)
-- Lideres/vice-lideres podem criar/editar reunioes do grupo
-- Membros podem inserir respostas e compromissos
-- Funcao `is_group_leader(user_id, grupo_id)` e `is_group_member(user_id, grupo_id)` como security definer
+A ideia central e remover o dashboard complexo e tratar o modo "Grupo Pequeno" exatamente como os demais modos: uma conversa com a IA na interface de chat, com historico na barra lateral esquerda.
 
 ---
 
-### Fase 2: Atualizar Tipos e Modo de Chat
+### Mudanca 1: Remover GruposDashboard do AppDashboard
 
-**Arquivo `src/types/chat.ts`:**
-- Substituir `academico` por `grupo_pequeno` no tipo `ChatMode`
-- Atualizar `MODOS_CHAT` com novo icone (Users), label "Grupo Pequeno", descricao "Planeje reunioes com os 4Es"
+**Arquivo:** `src/pages/AppDashboard.tsx`
 
-**Arquivo `supabase/functions/chat/index.ts`:**
-- Substituir `academico` por `grupo_pequeno` no VALID_MODES
-- Criar system prompt especifico para ajudar a planejar reunioes seguindo a metodologia 4Es
+Remover a condicional que renderiza `<GruposDashboard />` quando `modo === "grupo_pequeno"`. O modo Grupo Pequeno passara a usar o mesmo fluxo de chat das outras modalidades (ChatMessages + ChatInput).
 
 ---
 
-### Fase 3: Tipos TypeScript
+### Mudanca 2: Reescrever o system prompt do modo `grupo_pequeno`
 
-Criar `src/types/grupos.ts` com todas as interfaces:
-- GrupoPequeno, MembroGrupo, Reuniao, Encontro, Exaltacao, MusicaExaltacao, Edificacao, PerguntaEdificacao, RespostaPergunta, Envio, CompromissoEnvio, Presenca
+**Arquivo:** `supabase/functions/chat/index.ts`
 
----
+O prompt sera atualizado para:
 
-### Fase 4: Hooks de Dados
-
-Criar hooks para interacao com o banco:
-- `src/hooks/useGrupos.ts` - CRUD de grupos, listar grupos do usuario
-- `src/hooks/useReunioes.ts` - CRUD de reunioes, com dados dos 4Es
-- `src/hooks/useMembros.ts` - gestao de membros, presenca
-- `src/hooks/useEdificacao.ts` - perguntas, respostas, partilhas
+- **Formatacao rica obrigatoria:** instrucoes explicitas para usar espacamento entre paragrafos, bullets, **negrito** nos titulos de secao e *italico* nas citacoes biblicas literais
+- **Exaltacao simplificada:** em vez de sugerir nomes de musicas, trazer um versiculo conectado ao tema do dia + dicas para o lider escolher canticos adequados. Oferecer ajuda caso o usuario queira sugestoes especificas
+- **Fluxo guiado:** a IA conduz o planejamento da reuniao etapa por etapa (Encontro -> Exaltacao -> Edificacao -> Envio), perguntando ao usuario antes de avancar
+- **Tom pratico e acolhedor:** linguagem acessivel para lideres de celula
 
 ---
 
-### Fase 5: Componentes de UI
+### Mudanca 3: Melhorar regras globais de formatacao
 
-**Layout principal (`src/components/grupos/`):**
+**Arquivo:** `supabase/functions/chat/index.ts`
 
-1. `GruposDashboard.tsx` - Pagina principal com lista de grupos, calendario, metricas
-2. `GrupoForm.tsx` - Criar/editar grupo (nome, dia, horario, local)
-3. `MembrosManager.tsx` - Lista de membros, adicionar/remover, definir papeis
-4. `ReuniaoForm.tsx` - Formulario completo de reuniao com abas dos 4Es
+Atualizar o bloco `INTERACTION_RULES` para incluir instrucoes de formatacao mais claras que se apliquem a todos os modos:
 
-**Componentes dos 4Es:**
-5. `EncontroSection.tsx` - Campo titulo, instrucoes, duracao, banco de quebra-gelos
-6. `ExaltacaoSection.tsx` - Lista de musicas, adicionar, marcar executada, timer, links
-7. `EdificacaoSection.tsx` - Seletor de referencia biblica, contexto, perguntas interativas com respostas
-8. `EnvioSection.tsx` - Desafio, tipo, compromissos, follow-up
-
-**Componentes auxiliares:**
-9. `ReuniaoTimer.tsx` - Timer visual para cada etapa
-10. `PresencaList.tsx` - Registro de presenca por reuniao
-11. `ReuniaoProgressBar.tsx` - Barra de progresso da reuniao (4 etapas)
-12. `DashboardMetricas.tsx` - Frequencia media, participacao, desafios cumpridos
-
-**Modos de visualizacao:**
-- Preparacao: formulario completo editavel
-- Conducao: interface simplificada mobile-first com navegacao entre 4Es, timers ativos
-- Revisao: visualizacao somente leitura com metricas
+- Usar espacamento entre paragrafos (linha em branco)
+- Usar bullets para listas
+- **Negrito** em titulos e destaques
+- *Italico* em citacoes biblicas literais
+- Estrutura visual limpa e organizada
 
 ---
 
-### Fase 6: Fluxo de Navegacao
+### Mudanca 4: Atualizar sugestoes iniciais
 
-O modo "Grupo Pequeno" no seletor de modos tera comportamento diferente dos outros modos:
-- Ao selecionar, em vez de abrir o chat, exibe o `GruposDashboard`
-- O chat com IA continua disponivel dentro do contexto do grupo para ajudar a planejar
-- A interface do AppDashboard detecta `modo === "grupo_pequeno"` e renderiza o dashboard de grupos no lugar do chat
+**Arquivo:** `src/components/chat/ChatMessages.tsx`
 
-**Estrutura no AppDashboard:**
-```text
-if (modo === "grupo_pequeno") {
-  render <GruposDashboard />
-} else {
-  render <ChatMessages /> + <ChatInput />
-}
-```
+Ajustar as sugestoes do modo `grupo_pequeno` para refletir o novo fluxo conversacional:
+
+- "Planejar reuniao sobre [tema]"
+- "Preciso de um quebra-gelo criativo"
+- "Me ajude com o estudo de [passagem]"
 
 ---
 
-### Fase 7: Exportacao
+### Resumo tecnico
 
-Reutilizar a infraestrutura existente (`src/lib/exportToWord.ts`) para exportar:
-- Relatorio de reuniao completo (Word/PDF)
-- Historico de reunioes do grupo
+| Arquivo | Acao |
+|---|---|
+| `src/pages/AppDashboard.tsx` | Remover condicional do GruposDashboard, remover import |
+| `supabase/functions/chat/index.ts` | Reescrever prompt grupo_pequeno + melhorar INTERACTION_RULES |
+| `src/components/chat/ChatMessages.tsx` | Ajustar sugestoes iniciais do modo grupo_pequeno |
 
----
-
-### Fase 8: Biblioteca de Conteudo
-
-Dentro do dashboard de grupos:
-- Aba "Biblioteca" com quebra-gelos favoritos, historico de textos, perguntas eficazes
-- Reutilizacao de conteudo em novas reunioes
-
----
-
-### Resumo de arquivos afetados
-
-**Novos arquivos (~20+):**
-- `src/types/grupos.ts`
-- `src/hooks/useGrupos.ts`, `useReunioes.ts`, `useMembros.ts`, `useEdificacao.ts`
-- `src/components/grupos/` (10-12 componentes)
-- 1 migracao SQL grande
-
-**Arquivos modificados:**
-- `src/types/chat.ts` (substituir academico por grupo_pequeno)
-- `src/pages/AppDashboard.tsx` (condicional para renderizar dashboard de grupos)
-- `src/components/chat/ModoSelector.tsx` (automatico via types)
-- `supabase/functions/chat/index.ts` (novo system prompt)
-
-**Design:**
-- Mobile-first, tons pasteis/terrosos
-- Icones distintos para cada E (Handshake, Music, BookOpen, Rocket)
-- Tema claro/escuro mantido
-- Botoes grandes e acessiveis para uso durante reuniao
+Os componentes em `src/components/grupos/` e os hooks (`useGrupos`, `useReunioes`, `useMembros`) permanecem no projeto para uso futuro, mas nao serao referenciados no fluxo principal por enquanto.
 
