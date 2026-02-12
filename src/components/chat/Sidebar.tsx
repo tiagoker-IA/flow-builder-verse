@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Plus, Trash2, MessageCircle, X, Sparkles, Pencil, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, MessageCircle, X, Sparkles, Pencil, Check, Shield } from "lucide-react";
+import { useAdmin } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Conversa } from "@/types/chat";
@@ -26,6 +28,8 @@ export function Sidebar({
   isOpen = true,
   onClose,
 }: SidebarProps) {
+  const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [tituloEditado, setTituloEditado] = useState("");
 
@@ -183,7 +187,17 @@ export function Sidebar({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-sidebar-border">
+        <div className="p-5 border-t border-sidebar-border space-y-3">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              className="w-full gap-2 h-11 min-h-[44px] text-sm font-medium border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => { navigate("/admin"); onClose?.(); }}
+            >
+              <Shield className="w-4 h-4" />
+              Painel Administrativo
+            </Button>
+          )}
           <p className="text-xs text-sidebar-foreground/30 text-center font-medium tracking-wide uppercase">
             Assistente Teológico
           </p>
