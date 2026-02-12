@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_recovery: {
+        Row: {
+          created_at: string
+          id: string
+          recovery_email: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recovery_email: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recovery_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       compromissos_envio: {
         Row: {
           comprometeu: boolean

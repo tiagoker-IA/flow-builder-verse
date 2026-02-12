@@ -7,12 +7,14 @@ import { saveAs } from "file-saver";
 import { AddUserDialog } from "./AddUserDialog";
 import { ImportUsersDialog } from "./ImportUsersDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { AdminRoleToggle } from "./AdminRoleToggle";
 
 interface User {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
+  is_admin?: boolean;
 }
 
 interface UsersTableProps {
@@ -27,11 +29,11 @@ export function UsersTable({ usuarios, onRefresh }: UsersTableProps) {
   const [deleteUser, setDeleteUser] = useState<{ id: string; email: string } | null>(null);
 
   const exportCSV = () => {
-    const header = "Email,Data de Cadastro,Último Login\n";
+    const header = "Email,Role,Data de Cadastro,Último Login\n";
     const rows = usuarios
       .map(
         (u) =>
-          `${u.email},${new Date(u.created_at).toLocaleDateString("pt-BR")},${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}`
+          `${u.email},${u.is_admin ? "Admin" : "Usuário"},${new Date(u.created_at).toLocaleDateString("pt-BR")},${u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}`
       )
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
@@ -65,6 +67,7 @@ export function UsersTable({ usuarios, onRefresh }: UsersTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead>Último Login</TableHead>
                 <TableHead className="w-16">Ações</TableHead>
@@ -74,6 +77,14 @@ export function UsersTable({ usuarios, onRefresh }: UsersTableProps) {
               {usuarios.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.email}</TableCell>
+                  <TableCell>
+                    <AdminRoleToggle
+                      userId={u.id}
+                      email={u.email}
+                      isAdmin={!!u.is_admin}
+                      onToggled={handleRefresh}
+                    />
+                  </TableCell>
                   <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>
                     {u.last_sign_in_at

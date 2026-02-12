@@ -76,14 +76,23 @@ serve(async (req) => {
       supabaseAdmin.from("conversas").select("data_criacao").order("data_criacao", { ascending: true }),
     ]);
 
-    // Process users
+    // Process users with roles
     const users = usersRes.data?.users || [];
     const totalUsuarios = users.length;
+
+    // Fetch all admin roles
+    const { data: adminRoles } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, role")
+      .eq("role", "admin");
+    const adminUserIds = new Set((adminRoles || []).map((r: any) => r.user_id));
+
     const usersList = users.map((u: any) => ({
       id: u.id,
       email: u.email,
       created_at: u.created_at,
       last_sign_in_at: u.last_sign_in_at,
+      is_admin: adminUserIds.has(u.id),
     }));
 
     // Process conversas por modo

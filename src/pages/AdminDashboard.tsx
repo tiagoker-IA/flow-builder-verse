@@ -11,9 +11,12 @@ import { UsersTable } from "@/components/admin/UsersTable";
 import { FeedbacksTable } from "@/components/admin/FeedbacksTable";
 import { CampaignForm } from "@/components/admin/CampaignForm";
 import { CampaignList } from "@/components/admin/CampaignList";
-import { ArrowLeft, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCw, Sparkles, Settings } from "lucide-react";
 import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ChangeEmailDialog } from "@/components/admin/ChangeEmailDialog";
+import { RecoveryEmailDialog } from "@/components/admin/RecoveryEmailDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 
 interface AdminStats {
@@ -34,6 +37,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [changeEmailOpen, setChangeEmailOpen] = useState(false);
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
@@ -96,6 +101,21 @@ export default function AdminDashboard() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Atualizar
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setChangeEmailOpen(true)}>
+                  Alterar meu email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRecoveryOpen(true)}>
+                  Email de recuperação
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ThemeToggle />
           </div>
         </div>
@@ -138,6 +158,16 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ChangeEmailDialog
+        open={changeEmailOpen}
+        onOpenChange={setChangeEmailOpen}
+        currentEmail={user?.email || ""}
+      />
+      <RecoveryEmailDialog
+        open={recoveryOpen}
+        onOpenChange={setRecoveryOpen}
+      />
     </div>
   );
 }
