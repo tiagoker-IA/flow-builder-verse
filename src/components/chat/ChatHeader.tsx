@@ -1,4 +1,4 @@
-import { Sparkles, LogOut, Menu, Shield, UserCircle, LayoutDashboard } from "lucide-react";
+import { Sparkles, LogOut, Menu, Shield, UserCircle, LayoutDashboard, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ModoSelector } from "./ModoSelector";
@@ -16,6 +16,7 @@ interface ChatHeaderProps {
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
   mensagens?: Mensagem[];
+  isGuest?: boolean;
 }
 
 export function ChatHeader({ 
@@ -25,7 +26,8 @@ export function ChatHeader({
   onLogout,
   onToggleSidebar,
   showMenuButton,
-  mensagens = []
+  mensagens = [],
+  isGuest = false,
 }: ChatHeaderProps) {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
@@ -65,8 +67,8 @@ export function ChatHeader({
           <ModoSelector modo={modo} onModoChange={onModoChange} />
         </div>
         <ExportButton mensagens={mensagens} titulo={titulo} modo={modo} />
-        <FeedbackButton modoChat={modo} pagina="chat" />
-        {isAdmin && (
+        {!isGuest && <FeedbackButton modoChat={modo} pagina="chat" />}
+        {!isGuest && isAdmin && (
           <Button
             variant="ghost"
             size="icon"
@@ -78,33 +80,48 @@ export function ChatHeader({
           </Button>
         )}
         <ThemeToggle />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/dashboard")}
-          title="Meu Dashboard"
-          className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
-        >
-          <LayoutDashboard className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/profile")}
-          title="Meu Perfil"
-          className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
-        >
-          <UserCircle className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onLogout} 
-          title="Sair"
-          className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
-        >
-          <LogOut className="w-4 h-4" />
-        </Button>
+        {!isGuest && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+              title="Meu Dashboard"
+              className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/profile")}
+              title="Meu Perfil"
+              className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
+            >
+              <UserCircle className="w-4 h-4" />
+            </Button>
+          </>
+        )}
+        {isGuest ? (
+          <Button 
+            size="sm"
+            onClick={() => navigate("/auth")} 
+            className="gap-1.5 h-10 min-h-[44px] text-sm font-medium"
+          >
+            <LogIn className="w-4 h-4" />
+            <span className="hidden sm:inline">Entrar</span>
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onLogout} 
+            title="Sair"
+            className="text-muted-foreground hover:text-foreground h-10 w-10 min-h-[44px] min-w-[44px]"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

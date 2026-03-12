@@ -38,6 +38,14 @@ const Header = () => {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate("/app")}
+              className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
+            >
+              Experimentar
+            </Button>
+            <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate("/auth")}

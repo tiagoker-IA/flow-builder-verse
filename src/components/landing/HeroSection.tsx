@@ -48,10 +48,10 @@ const HeroSection = () => {
           <Button 
             variant="outline" 
             size="lg"
-            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => navigate("/app")}
             className="px-8 py-6 text-lg"
           >
-            Conhecer Recursos
+            Experimentar sem Cadastro
           </Button>
         </div>
 
