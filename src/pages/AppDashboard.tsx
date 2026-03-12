@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversas } from "@/hooks/useConversas";
 import { useChat } from "@/hooks/useChat";
+import { useGuestConversas } from "@/hooks/useGuestConversas";
+import { useGuestChat } from "@/hooks/useGuestChat";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModoSelector } from "@/components/chat/ModoSelector";
 import { ProgressIndicator } from "@/components/chat/ProgressIndicator";
+import { GuestBanner } from "@/components/chat/GuestBanner";
 
 import { ChatMode } from "@/types/chat";
 import { Loader2 } from "lucide-react";
@@ -21,6 +24,15 @@ export default function AppDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
+  const isGuest = !authLoading && !user;
+
+  // Authenticated hooks
+  const authConversas = useConversas(user?.id);
+
+  // Guest hooks
+  const guestConversas = useGuestConversas();
+
+  // Pick the right set based on auth state
   const {
     conversas,
     conversaAtual,
@@ -31,20 +43,24 @@ export default function AppDashboard() {
     selecionarConversa,
     deletarConversa,
     atualizarTitulo,
-  } = useConversas(user?.id);
+  } = isGuest ? guestConversas : authConversas;
 
-  const { enviarMensagem } = useChat({
+  const authChat = useChat({
     conversaId: conversaAtual?.id || "",
-    modo: conversaAtual?.modo as ChatMode || modo,
+    modo: (conversaAtual?.modo as ChatMode) || modo,
     mensagens,
     setMensagens,
   });
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
+  const guestChat = useGuestChat({
+    conversaId: conversaAtual?.id || "",
+    modo: (conversaAtual?.modo as ChatMode) || modo,
+    mensagens,
+    setMensagens,
+    persistMensagens: guestConversas.persistMensagens,
+  });
+
+  const { enviarMensagem } = isGuest ? guestChat : authChat;
 
   const handleNovaConversa = async () => {
     await criarConversa(modo);
@@ -81,11 +97,15 @@ export default function AppDashboard() {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    navigate("/auth");
+    if (isGuest) {
+      navigate("/auth");
+    } else {
+      await signOut();
+      navigate("/auth");
+    }
   };
 
-  if (authLoading || conversasLoading) {
+  if (authLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -105,17 +125,29 @@ export default function AppDashboard() {
         onRenomearConversa={atualizarTitulo}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        isGuest={isGuest}
+        guestConversasCount={guestConversas.conversas.length}
+        guestMaxConversas={guestConversas.maxConversas}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <ChatHeader
           titulo={conversaAtual?.titulo || ""}
-          modo={conversaAtual?.modo as ChatMode || modo}
+          modo={(conversaAtual?.modo as ChatMode) || modo}
           onModoChange={setModo}
           onLogout={handleLogout}
           onToggleSidebar={() => setSidebarOpen(true)}
           showMenuButton={true}
           mensagens={mensagens}
+          isGuest={isGuest}
         />
+
+        {/* Guest banner */}
+        {isGuest && (
+          <GuestBanner
+            conversasCount={guestConversas.conversas.length}
+            maxConversas={guestConversas.maxConversas}
+          />
+        )}
         
         {/* Mobile mode selector */}
           <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
@@ -132,7 +164,7 @@ export default function AppDashboard() {
             mensagens={mensagens} 
             isLoading={isSending} 
             onEnviarSugestao={handleEnviarMensagem}
-            modo={conversaAtual?.modo as ChatMode || modo}
+            modo={(conversaAtual?.modo as ChatMode) || modo}
           />
           <ChatInput 
             onEnviar={handleEnviarMensagem} 

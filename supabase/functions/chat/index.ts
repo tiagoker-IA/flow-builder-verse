@@ -179,7 +179,7 @@ function containsPromptInjection(content: string): boolean {
 }
 
 // Input validation function with content sanitization
-function validateInput(messages: unknown, modo: unknown): { valid: boolean; error?: string } {
+function validateInput(messages: unknown, modo: unknown, maxMessages: number = 100): { valid: boolean; error?: string } {
   // Validate modo
   if (modo !== undefined && (typeof modo !== 'string' || !VALID_MODES.includes(modo))) {
     return { valid: false, error: "Modo inválido" };
@@ -191,7 +191,7 @@ function validateInput(messages: unknown, modo: unknown): { valid: boolean; erro
   }
 
   // Validate messages array length
-  if (messages.length === 0 || messages.length > 100) {
+  if (messages.length === 0 || messages.length > maxMessages) {
     return { valid: false, error: "Número de mensagens fora dos limites permitidos" };
   }
 
@@ -233,7 +233,7 @@ serve(async (req) => {
   }
 
   try {
-    // JWT Authentication
+    // JWT Authentication — allow both authenticated users and guest (anon key) requests
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
@@ -242,30 +242,43 @@ serve(async (req) => {
       );
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
     const token = authHeader.replace('Bearer ', '');
-    const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
     
-    if (authError || !data?.claims) {
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado' }), 
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    let isGuest = false;
+    let userId = 'guest';
 
-    const userId = data.claims.sub;
-    console.log(`Authenticated user: ${userId}`);
+    // Check if it's the anon key (guest mode) or a real JWT
+    if (token === anonKey) {
+      isGuest = true;
+      console.log("Guest request (anon key)");
+    } else {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        anonKey,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+      
+      if (authError || !data?.claims) {
+        return new Response(
+          JSON.stringify({ error: 'Não autorizado' }), 
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      userId = data.claims.sub as string;
+      console.log(`Authenticated user: ${userId}`);
+    }
 
     // Parse and validate input
     const body = await req.json();
     const { messages, modo = "livre" } = body;
 
-    const validation = validateInput(messages, modo);
+    // Guest users have stricter message limit (20 vs 100)
+    const maxMessages = isGuest ? 20 : 100;
+    const validation = validateInput(messages, modo, maxMessages);
     if (!validation.valid) {
       return new Response(
         JSON.stringify({ error: validation.error }), 
@@ -284,7 +297,7 @@ serve(async (req) => {
 
     const systemPrompt = SYSTEM_PROMPTS[modo] || SYSTEM_PROMPTS.livre;
 
-    console.log(`Chat request - user: ${userId}, mode: ${modo}, messages: ${messages.length}`);
+    console.log(`Chat request - user: ${userId}, mode: ${modo}, messages: ${messages.length}, guest: ${isGuest}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

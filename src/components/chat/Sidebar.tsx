@@ -16,6 +16,9 @@ interface SidebarProps {
   onRenomearConversa: (id: string, novoTitulo: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  isGuest?: boolean;
+  guestConversasCount?: number;
+  guestMaxConversas?: number;
 }
 
 export function Sidebar({
@@ -27,6 +30,9 @@ export function Sidebar({
   onRenomearConversa,
   isOpen = true,
   onClose,
+  isGuest = false,
+  guestConversasCount = 0,
+  guestMaxConversas = 3,
 }: SidebarProps) {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
@@ -97,6 +103,11 @@ export function Sidebar({
             <Plus className="w-5 h-5" />
             Nova Conversa
           </Button>
+          {isGuest && (
+            <p className="text-xs text-sidebar-foreground/50 text-center mt-2">
+              {guestConversasCount}/{guestMaxConversas} conversas
+            </p>
+          )}
         </div>
 
         {/* Conversations list */}
@@ -188,7 +199,7 @@ export function Sidebar({
 
         {/* Footer */}
         <div className="p-5 border-t border-sidebar-border space-y-3">
-          {isAdmin && (
+          {!isGuest && isAdmin && (
             <Button
               variant="outline"
               className="w-full gap-2 h-11 min-h-[44px] text-sm font-medium border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent"
@@ -196,6 +207,14 @@ export function Sidebar({
             >
               <Shield className="w-4 h-4" />
               Painel Administrativo
+            </Button>
+          )}
+          {isGuest && (
+            <Button
+              className="w-full gap-2 h-11 min-h-[44px] text-sm font-medium"
+              onClick={() => { navigate("/auth"); onClose?.(); }}
+            >
+              Criar Conta Grátis
             </Button>
           )}
           <p className="text-xs text-sidebar-foreground/30 text-center font-medium tracking-wide uppercase">
