@@ -58,11 +58,10 @@ serve(async (req) => {
     if (!isGuest) {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
-      const { data, error } = await supabase.auth.getClaims(token);
-      if (error || !data?.claims) {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) {
         return new Response(
           JSON.stringify({ error: "Não autorizado" }),
           { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
