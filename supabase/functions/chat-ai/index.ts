@@ -110,6 +110,7 @@ serve(async (req) => {
           ...limitedMessages,
         ],
         stream: true,
+        ...(temperature !== undefined && { temperature }),
       }),
     });
 
