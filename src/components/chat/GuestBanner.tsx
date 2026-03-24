@@ -3,12 +3,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, X } from "lucide-react";
 import { useState } from "react";
 
-interface GuestBannerProps {
-  conversasCount: number;
-  maxConversas: number;
-}
-
-export function GuestBanner({ conversasCount, maxConversas }: GuestBannerProps) {
+export function GuestBanner() {
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
