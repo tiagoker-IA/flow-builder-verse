@@ -56,15 +56,6 @@ export function useGuestConversas() {
   }, []);
 
   const criarConversa = useCallback(async (modo: ChatMode = "livre") => {
-    if (conversas.length >= MAX_CONVERSAS) {
-      toast({
-        title: "Limite atingido",
-        description: `No modo visitante, você pode ter até ${MAX_CONVERSAS} conversas. Crie uma conta para acesso ilimitado!`,
-        variant: "destructive",
-      });
-      return null;
-    }
-
     const novaConversa: Conversa = {
       id: crypto.randomUUID(),
       titulo: "Nova Conversa",
