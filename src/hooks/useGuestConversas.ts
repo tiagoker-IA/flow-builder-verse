@@ -33,7 +33,7 @@ export function useGuestConversas() {
   const [conversaAtual, setConversaAtual] = useState<Conversa | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
 
   // Load on mount
   useEffect(() => {
