@@ -34,101 +34,114 @@ Seja acolhedor e pastoral.`,
 - Quebra-gelos criativos (Encontro)
 - Momentos de louvor e oração (Exaltação)
 - Estudo bíblico interativo com perguntas (Edificação)
-- Desafios práticos de aplicação (Envio)`,
+- Desafios práticos de aplicação (Envio).`,
 
   livre: `Você é um assistente cristão reformado para conversas gerais sobre temas bíblicos, teologia, vida cristã e questões pastorais. Responda de forma clara, fundamentada e acolhedora.`,
 };
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const lovableApiKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
+
+const adminClient = supabaseUrl && serviceRoleKey
+  ? createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  : null;
+
+const jsonResponse = (status: number, body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { messages, modo } = await req.json();
+  if (req.method !== "POST") {
+    return jsonResponse(405, { error: "Método não permitido" });
+  }
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Mensagens são obrigatórias" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+  try {
+    if (!lovableApiKey) {
+      return jsonResponse(500, { error: "LOVABLE_API_KEY não configurada" });
     }
 
-    // Determine if guest or authenticated
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const isGuest = token === anonKey;
+    const payload = await req.json().catch(() => null);
+    const messages = payload?.messages;
+    const modo = payload?.modo;
 
-    // For guests, limit history to 20 messages
-    const limitedMessages = isGuest ? messages.slice(-20) : messages;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return jsonResponse(400, { error: "Mensagens são obrigatórias" });
+    }
 
-    // If authenticated, verify the JWT
+    const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+    const isGuest = !token || (anonKey && token === anonKey);
+
     if (!isGuest) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return new Response(
-          JSON.stringify({ error: "Não autorizado" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (!adminClient) {
+        return jsonResponse(500, { error: "Cliente de autenticação indisponível" });
+      }
+
+      const { data, error } = await adminClient.auth.getUser(token);
+      if (error || !data?.user) {
+        return jsonResponse(401, { error: "Não autorizado" });
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY não configurada");
-    }
+    const boundedMessages = isGuest ? messages.slice(-20) : messages;
+    const systemPrompt = SYSTEM_PROMPTS[modo] || SYSTEM_PROMPTS.livre;
 
-    const systemPrompt = SYSTEM_PROMPTS[modo] || SYSTEM_PROMPTS["livre"];
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${lovableApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...limitedMessages,
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...boundedMessages],
         stream: true,
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    if (!aiResponse.ok) {
+      if (aiResponse.status === 429) {
+        return jsonResponse(429, {
+          error: "Limite de requisições excedido. Tente novamente em alguns instantes.",
+        });
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos de IA esgotados." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+
+      if (aiResponse.status === 402) {
+        return jsonResponse(402, { error: "Créditos de IA esgotados." });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "Erro no serviço de IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+
+      const errorText = await aiResponse.text();
+      console.error("AI gateway error:", aiResponse.status, errorText);
+      return jsonResponse(500, { error: "Erro no serviço de IA" });
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    if (!aiResponse.body) {
+      return jsonResponse(500, { error: "Resposta vazia da IA" });
+    }
+
+    return new Response(aiResponse.body, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
     });
   } catch (error) {
     console.error("chat error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse(500, {
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    });
   }
 });
