@@ -29,8 +29,6 @@ export function Sidebar({
   isOpen = true,
   onClose,
   isGuest = false,
-  guestConversasCount = 0,
-  guestMaxConversas = 3,
 }: SidebarProps) {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
