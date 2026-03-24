@@ -76,7 +76,7 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`,
         {
           method: "POST",
           headers: {

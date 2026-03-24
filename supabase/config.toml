@@ -1,6 +1,6 @@
 project_id = "omhhudldrmhxkyvrxekq"
 
-[functions.chat]
+[functions.chat-ai]
 verify_jwt = false
 
 [functions.admin-stats]
