@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Conversa, Mensagem, ChatMode } from "@/types/chat";
-import { useToast } from "@/hooks/use-toast";
+
 
 const STORAGE_KEY = "logosflow_guest_conversas";
 // No conversation limit for guests
