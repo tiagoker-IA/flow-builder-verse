@@ -324,6 +324,7 @@ serve(async (req) => {
           ...messages,
         ],
         stream: true,
+        ...(modo === "exegese" ? { temperature: 0.3 } : {}),
       }),
     });
 
