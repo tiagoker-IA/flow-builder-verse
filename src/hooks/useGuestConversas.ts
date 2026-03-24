@@ -119,6 +119,5 @@ export function useGuestConversas() {
     deletarConversa,
     atualizarTitulo,
     persistMensagens,
-    maxConversas: MAX_CONVERSAS,
   };
 }
