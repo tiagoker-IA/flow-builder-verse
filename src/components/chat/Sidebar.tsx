@@ -105,7 +105,7 @@ export function Sidebar({
           </Button>
           {isGuest && (
             <p className="text-xs text-sidebar-foreground/50 text-center mt-2">
-              Modo visitante
+              {guestConversasCount}/{guestMaxConversas} conversas
             </p>
           )}
         </div>

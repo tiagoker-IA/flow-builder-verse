@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 // Valid modes whitelist
@@ -68,30 +68,18 @@ REGRAS:
 - Ofereça sugestões concretas
 - Seja prático e útil`,
 
-  exegese: `Você é o LogosFlow, um assistente teológico especializado em exegese bíblica. Seu objetivo é ajudar pastores e líderes com pouca formação teológica, entregando profundidade em linguagem simples.
+  exegese: `Você é o LogosFlow, especialista em exegese bíblica.
 
 ${INTERACTION_RULES}
 
-Ao receber um texto bíblico, divida SEMPRE sua resposta nestas 4 etapas (usando formatação Markdown):
+ANÁLISE TEXTUAL:
+- Contexto histórico e cultural
+- Estrutura literária
+- Palavras-chave (hebraico/grego)
+- Paralelos bíblicos
+- Interpretação cristocêntrica
 
-## 🌍 O MUNDO DO TEXTO (Contexto Histórico e Literário)
-Quem escreveu, para quem, cenário cultural e problema abordado.
-
-## 🔬 A LENTE NOS ORIGINAIS (Análise de Palavras-Chave)
-Selecione 2 a 3 palavras no idioma original (Grego/Hebraico), dê a transliteração e o significado de forma simples.
-
-## ❤️ O CORAÇÃO DA MENSAGEM (Teologia do Texto)
-Qual a verdade central e como aponta para Cristo.
-
-## 🌉 A PONTE PARA HOJE (Aplicação Prática)
-Como se aplica hoje, com 2 exemplos práticos para a igreja.
-
-REGRAS:
-- Sem jargões complexos sem explicação
-- Tom encorajador e didático
-- Seja neutro em debates teológicos
-- Complete cada seção antes de passar para a próxima
-- Use linguagem acessível para quem não tem formação teológica formal`,
+Seja preciso e acessível. Cite comentaristas reformados quando relevante.`,
 
   devocional: `Você é o LogosFlow, guia devocional reformado.
 
@@ -255,17 +243,13 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const anonKeyFromEnv = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-    const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '';
-    const anonKey = anonKeyFromEnv || publishableKey;
-    
-    console.log(`Auth debug - token length: ${token.length}, anonKey length: ${anonKey.length}, match: ${token === anonKey}, anonKeyFromEnv set: ${!!anonKeyFromEnv}, publishableKey set: ${!!publishableKey}`);
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
     
     let isGuest = false;
     let userId = 'guest';
 
     // Check if it's the anon key (guest mode) or a real JWT
-    if (token === anonKey || token === anonKeyFromEnv || token === publishableKey) {
+    if (token === anonKey) {
       isGuest = true;
       console.log("Guest request (anon key)");
     } else {
@@ -275,16 +259,16 @@ serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+      const { data, error: authError } = await supabaseClient.auth.getClaims(token);
       
-      if (authError || !user) {
+      if (authError || !data?.claims) {
         return new Response(
           JSON.stringify({ error: 'Não autorizado' }), 
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      userId = user.id;
+      userId = data.claims.sub as string;
       console.log(`Authenticated user: ${userId}`);
     }
 
@@ -328,7 +312,6 @@ serve(async (req) => {
           ...messages,
         ],
         stream: true,
-        ...(modo === "exegese" ? { temperature: 0.3 } : {}),
       }),
     });
 

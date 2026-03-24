@@ -3,7 +3,7 @@ import { Conversa, Mensagem, ChatMode } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 
 const STORAGE_KEY = "logosflow_guest_conversas";
-const MAX_CONVERSAS = Infinity;
+const MAX_CONVERSAS = 3;
 
 interface GuestData {
   conversas: Conversa[];

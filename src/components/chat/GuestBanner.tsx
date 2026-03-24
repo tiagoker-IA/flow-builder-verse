@@ -19,7 +19,7 @@ export function GuestBanner({ conversasCount, maxConversas }: GuestBannerProps) 
       <div className="flex items-center gap-2 text-sm text-foreground min-w-0">
         <UserPlus className="w-4 h-4 text-primary shrink-0" />
         <span className="truncate">
-          <strong>Modo visitante</strong> —{" "}
+          <strong>Modo visitante</strong> — {conversasCount}/{maxConversas} conversas.{" "}
           <span className="hidden sm:inline">Crie sua conta para acesso completo.</span>
         </span>
       </div>
