@@ -255,13 +255,17 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '';
+    const anonKeyFromEnv = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '';
+    const anonKey = anonKeyFromEnv || publishableKey;
+    
+    console.log(`Auth debug - token length: ${token.length}, anonKey length: ${anonKey.length}, match: ${token === anonKey}, anonKeyFromEnv set: ${!!anonKeyFromEnv}, publishableKey set: ${!!publishableKey}`);
     
     let isGuest = false;
     let userId = 'guest';
 
     // Check if it's the anon key (guest mode) or a real JWT
-    if (token === anonKey) {
+    if (token === anonKey || token === anonKeyFromEnv || token === publishableKey) {
       isGuest = true;
       console.log("Guest request (anon key)");
     } else {
