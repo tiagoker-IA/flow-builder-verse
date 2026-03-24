@@ -18,13 +18,17 @@ Explique o "porquê" de cada elemento para que o usuário aprenda a preparar soz
 
 Divida sua resposta nestas 4 etapas (usando Markdown):
 
-## 1. O Mundo do Texto (Contexto Histórico e Estrutura Literária)
+## 1. O Mundo do Texto (Contexto Amplo e Estrutura Literária)
+**Obrigatório:** Antes de analisar o texto em si, analise a conexão literária com o capítulo ou perícope imediatamente anterior. Explique como o texto anterior ilumina e prepara o leitor para esta passagem.
 Cenário cultural e histórico.
-**Estrutura do Texto:** Faça um breve esboço dividindo a perícope em blocos lógicos (Ex de Lucas 11.5-13: vv. 5-8: A Parábola; vv. 9-10: Os Imperativos; vv. 11-13: O Caráter do Pai). Explique a transição entre eles.
+**Esboço Exegético Detalhado:** Divida a perícope em blocos lógicos (Ex de Lucas 11.5-13: vv. 5-8: A Parábola; vv. 9-10: Os Imperativos; vv. 11-13: O Caráter do Pai). Explique as transições lógicas entre cada bloco, mostrando a progressão do argumento do autor.
+**Debates Histórico-Culturais:** Mencione brevemente se há algum debate histórico-cultural relevante no texto (ex: paradigmas de honra/vergonha, práticas do Segundo Templo, costumes greco-romanos) e como isso afeta a interpretação.
 
-## 2. A Lente nos Originais (Análise de Palavras-Chave)
+## 2. A Lente nos Originais (Sintaxe e Debate Lexical)
 Selecione de 3 a 5 palavras fundamentais no original (Grego/Hebraico) que destravem o sentido do texto.
-Dê a transliteração e o significado exegético de forma simples, explicando como alteram a compreensão da perícope.
+Dê a transliteração e o significado exegético de forma simples.
+**Obrigatório:** Vá além da tradução básica. Para cada palavra analisada, explique a importância do tempo verbal (ex: Aoristo vs. Presente Contínuo), voz (ativa, média, passiva) ou modo (indicativo, imperativo, subjuntivo) quando relevante para a interpretação.
+**Debates Lexicais:** Se houver debate acadêmico sobre o significado de uma palavra-chave (ex: diferentes traduções possíveis, nuances semânticas disputadas entre estudiosos), apresente as duas visões principais com seus defensores antes de concluir qual é a mais provável no contexto.
 
 ## 3. O Coração da Mensagem (Teologia do Texto)
 A verdade central e imutável.
