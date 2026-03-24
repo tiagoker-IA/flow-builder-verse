@@ -61,7 +61,7 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`,
         {
           method: "POST",
           headers: {
