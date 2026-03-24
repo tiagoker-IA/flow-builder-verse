@@ -17,8 +17,6 @@ interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   isGuest?: boolean;
-  guestConversasCount?: number;
-  guestMaxConversas?: number;
 }
 
 export function Sidebar({
