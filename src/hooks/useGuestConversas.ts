@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { Conversa, Mensagem, ChatMode } from "@/types/chat";
-import { useToast } from "@/hooks/use-toast";
+
 
 const STORAGE_KEY = "logosflow_guest_conversas";
-const MAX_CONVERSAS = 3;
+// No conversation limit for guests
 
 interface GuestData {
   conversas: Conversa[];
@@ -33,7 +33,7 @@ export function useGuestConversas() {
   const [conversaAtual, setConversaAtual] = useState<Conversa | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
 
   // Load on mount
   useEffect(() => {
@@ -56,15 +56,6 @@ export function useGuestConversas() {
   }, []);
 
   const criarConversa = useCallback(async (modo: ChatMode = "livre") => {
-    if (conversas.length >= MAX_CONVERSAS) {
-      toast({
-        title: "Limite atingido",
-        description: `No modo visitante, você pode ter até ${MAX_CONVERSAS} conversas. Crie uma conta para acesso ilimitado!`,
-        variant: "destructive",
-      });
-      return null;
-    }
-
     const novaConversa: Conversa = {
       id: crypto.randomUUID(),
       titulo: "Nova Conversa",
@@ -81,7 +72,7 @@ export function useGuestConversas() {
     persistConversas(novasConversas);
 
     return novaConversa;
-  }, [conversas, toast, persistConversas]);
+  }, [conversas, persistConversas]);
 
   const selecionarConversa = useCallback(async (conversa: Conversa) => {
     setConversaAtual(conversa);
@@ -128,6 +119,5 @@ export function useGuestConversas() {
     deletarConversa,
     atualizarTitulo,
     persistMensagens,
-    maxConversas: MAX_CONVERSAS,
   };
 }

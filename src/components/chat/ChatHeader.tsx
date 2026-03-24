@@ -66,7 +66,7 @@ export function ChatHeader({
         <div className="hidden md:block">
           <ModoSelector modo={modo} onModoChange={onModoChange} />
         </div>
-        <ExportButton mensagens={mensagens} titulo={titulo} modo={modo} />
+        {!isGuest && <ExportButton mensagens={mensagens} titulo={titulo} modo={modo} />}
         {!isGuest && <FeedbackButton modoChat={modo} pagina="chat" />}
         {!isGuest && isAdmin && (
           <Button

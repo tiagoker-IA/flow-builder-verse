@@ -17,8 +17,6 @@ interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   isGuest?: boolean;
-  guestConversasCount?: number;
-  guestMaxConversas?: number;
 }
 
 export function Sidebar({
@@ -31,8 +29,6 @@ export function Sidebar({
   isOpen = true,
   onClose,
   isGuest = false,
-  guestConversasCount = 0,
-  guestMaxConversas = 3,
 }: SidebarProps) {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
@@ -105,7 +101,7 @@ export function Sidebar({
           </Button>
           {isGuest && (
             <p className="text-xs text-sidebar-foreground/50 text-center mt-2">
-              {guestConversasCount}/{guestMaxConversas} conversas
+              Modo visitante
             </p>
           )}
         </div>

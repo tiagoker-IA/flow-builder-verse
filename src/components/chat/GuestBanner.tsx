@@ -3,12 +3,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, X } from "lucide-react";
 import { useState } from "react";
 
-interface GuestBannerProps {
-  conversasCount: number;
-  maxConversas: number;
-}
-
-export function GuestBanner({ conversasCount, maxConversas }: GuestBannerProps) {
+export function GuestBanner() {
   const navigate = useNavigate();
   const [dismissed, setDismissed] = useState(false);
 
@@ -19,8 +14,7 @@ export function GuestBanner({ conversasCount, maxConversas }: GuestBannerProps) 
       <div className="flex items-center gap-2 text-sm text-foreground min-w-0">
         <UserPlus className="w-4 h-4 text-primary shrink-0" />
         <span className="truncate">
-          <strong>Modo visitante</strong> — {conversasCount}/{maxConversas} conversas.{" "}
-          <span className="hidden sm:inline">Crie sua conta para acesso completo.</span>
+          <strong>Modo visitante</strong> — Crie sua conta para exportar arquivos e salvar seu histórico na nuvem.
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
