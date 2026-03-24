@@ -49,23 +49,31 @@ serve(async (req) => {
       );
     }
 
-    // Auth: accept both JWT and anon key
+    // Auth: determine if guest or authenticated
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-    const isGuest = token === anonKey;
+    const publishableKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+
+    // Guest if token matches anon key, publishable key, or is empty
+    let isGuest = !token || token === anonKey || token === publishableKey;
 
     if (!isGuest) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (error || !user) {
-        return new Response(
-          JSON.stringify({ error: "Não autorizado" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      // Try to validate as authenticated user
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) {
+          // Token is invalid — treat as guest instead of blocking
+          console.warn("Invalid token, falling back to guest mode:", error?.message);
+          isGuest = true;
+        }
+      } catch (authErr) {
+        console.warn("Auth check failed, falling back to guest mode:", authErr);
+        isGuest = true;
       }
     }
 
