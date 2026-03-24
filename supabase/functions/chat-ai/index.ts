@@ -90,6 +90,7 @@ serve(async (req) => {
 
     const systemPrompt = SYSTEM_PROMPTS[modo] || SYSTEM_PROMPTS.livre;
     const limitedMessages = isGuest ? messages.slice(-20) : messages;
+    const temperature = modo === "exegese" ? 0.3 : undefined;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
