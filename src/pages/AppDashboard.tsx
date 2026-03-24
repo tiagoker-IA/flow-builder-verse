@@ -126,8 +126,6 @@ export default function AppDashboard() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isGuest={isGuest}
-        guestConversasCount={guestConversas.conversas.length}
-        guestMaxConversas={guestConversas.maxConversas}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <ChatHeader
