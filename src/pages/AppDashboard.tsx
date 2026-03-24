@@ -140,12 +140,7 @@ export default function AppDashboard() {
         />
 
         {/* Guest banner */}
-        {isGuest && (
-          <GuestBanner
-            conversasCount={guestConversas.conversas.length}
-            maxConversas={guestConversas.maxConversas}
-          />
-        )}
+         {isGuest && <GuestBanner />}
         
         {/* Mobile mode selector */}
           <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
