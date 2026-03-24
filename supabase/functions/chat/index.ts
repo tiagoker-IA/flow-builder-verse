@@ -271,16 +271,16 @@ serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
       
-      if (authError || !data?.claims) {
+      if (authError || !user) {
         return new Response(
           JSON.stringify({ error: 'Não autorizado' }), 
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      userId = data.claims.sub as string;
+      userId = user.id;
       console.log(`Authenticated user: ${userId}`);
     }
 
