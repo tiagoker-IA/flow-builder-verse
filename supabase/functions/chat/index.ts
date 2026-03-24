@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Valid modes whitelist
@@ -255,7 +255,7 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? '';
     
     let isGuest = false;
     let userId = 'guest';
@@ -271,16 +271,16 @@ serve(async (req) => {
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
       
-      if (authError || !data?.claims) {
+      if (authError || !user) {
         return new Response(
           JSON.stringify({ error: 'Não autorizado' }), 
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      userId = data.claims.sub as string;
+      userId = user.id;
       console.log(`Authenticated user: ${userId}`);
     }
 
