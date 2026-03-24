@@ -72,7 +72,7 @@ export function useGuestConversas() {
     persistConversas(novasConversas);
 
     return novaConversa;
-  }, [conversas, toast, persistConversas]);
+  }, [conversas, persistConversas]);
 
   const selecionarConversa = useCallback(async (conversa: Conversa) => {
     setConversaAtual(conversa);
