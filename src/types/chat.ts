@@ -32,14 +32,14 @@ export const MODOS_CHAT: ModoInfo[] = [
   { 
     value: "mensagem", 
     label: "Mensagem", 
-    description: "Preparação de sermões reformados",
+    description: "Crie esboços de pregação estruturados",
     icon: FileText,
     color: "text-amber-600 dark:text-amber-400"
   },
   { 
     value: "exegese", 
     label: "Exegese", 
-    description: "Análise profunda de textos bíblicos",
+    description: "Análise profunda de passagens bíblicas",
     icon: BookOpen,
     color: "text-blue-600 dark:text-blue-400"
   },

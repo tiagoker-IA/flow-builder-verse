@@ -21,7 +21,7 @@ const features = [
   },
   {
     icon: PenTool,
-    title: "Estruturação de Sermões",
+    title: "Criar Esboço de Pregação",
     description: "Organização lógica com introdução, desenvolvimento e conclusão impactantes."
   },
   {

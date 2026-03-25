@@ -7,9 +7,9 @@ import {
 
 const faqs = [
   {
-    question: "O que é o Flow Builder Verse?",
+    question: "O que é o LogosFlow?",
     answer:
-      "É uma plataforma que utiliza inteligência artificial para auxiliar pregadores e líderes na preparação de mensagens, estudos bíblicos e reuniões de grupos pequenos — tudo de forma estruturada e teologicamente fundamentada.",
+      "É uma plataforma que utiliza inteligência artificial para auxiliar pregadores e líderes na preparação de pregações, estudos bíblicos e reuniões de grupos pequenos — tudo de forma estruturada e teologicamente fundamentada.",
   },
   {
     question: "Preciso ter conhecimento teológico para usar?",
@@ -24,7 +24,7 @@ const faqs = [
   {
     question: "Quais modos de assistência estão disponíveis?",
     answer:
-      "São cinco modos: Mensagem (fluxo guiado em 7 etapas para pregações), Exegese (análise profunda de textos bíblicos), Devocional (reflexões para meditação pessoal), Livre (conversa aberta sobre temas bíblicos) e Grupos Pequenos (planejamento completo de reuniões com os 4 Es).",
+      "São cinco modos: Mensagem (crie esboços de pregação passo a passo), Exegese (análise profunda de passagens bíblicas), Devocional (reflexões para meditação pessoal), Livre (conversa aberta sobre temas bíblicos) e Grupos Pequenos (planejamento completo de reuniões com os 4 Es).",
   },
   {
     question: "Posso exportar o conteúdo gerado?",
