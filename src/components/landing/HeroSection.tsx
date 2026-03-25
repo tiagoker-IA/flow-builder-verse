@@ -18,7 +18,7 @@ const HeroSection = () => {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-fade-in">
           <Sparkles className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">Assistente especializado em homilética</span>
+          <span className="text-sm font-medium text-primary">Assistente inteligente para pregadores e líderes</span>
         </div>
 
         {/* Main headline */}
@@ -31,7 +31,7 @@ const HeroSection = () => {
 
         {/* Subtitle */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-          O LogosFlow é seu assistente pessoal para criar sermões, estudos bíblicos 
+          O LogosFlow é seu assistente pessoal para criar pregações, estudos bíblicos 
           e reflexões teológicas com profundidade e clareza.
         </p>
 
