@@ -4,123 +4,123 @@
 
 @layer base {
   :root {
-    /* Paleta refinada - Modo Claro */
-    --background: 210 17% 98%;
-    --foreground: 210 11% 15%;
+    /* Paleta Theological Elegance - Modo Claro */
+    --background: 30 15% 97%;
+    --foreground: 220 20% 12%;
 
-    --card: 210 17% 98%;
-    --card-foreground: 210 11% 15%;
+    --card: 30 12% 98%;
+    --card-foreground: 220 20% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 11% 15%;
+    --popover-foreground: 220 20% 12%;
 
-    --primary: 43 91% 38%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 345 45% 28%;
+    --primary-foreground: 30 20% 97%;
 
-    --secondary: 210 14% 93%;
-    --secondary-foreground: 210 11% 15%;
+    --secondary: 30 10% 92%;
+    --secondary-foreground: 220 20% 12%;
 
-    --muted: 210 14% 93%;
-    --muted-foreground: 208 7% 46%;
+    --muted: 30 10% 92%;
+    --muted-foreground: 220 8% 46%;
 
-    --accent: 43 91% 38%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 345 45% 28%;
+    --accent-foreground: 30 20% 97%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 14% 89%;
-    --input: 210 14% 89%;
-    --ring: 43 91% 38%;
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
+    --ring: 345 45% 28%;
 
     --radius: 0.5rem;
 
-    /* Sidebar - tom mais escuro para contraste */
-    --sidebar-background: 210 14% 93%;
-    --sidebar-foreground: 210 11% 15%;
-    --sidebar-primary: 43 91% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 14% 89%;
-    --sidebar-accent-foreground: 210 11% 15%;
-    --sidebar-border: 210 14% 89%;
-    --sidebar-ring: 43 91% 38%;
+    /* Sidebar */
+    --sidebar-background: 30 8% 93%;
+    --sidebar-foreground: 220 20% 12%;
+    --sidebar-primary: 345 45% 28%;
+    --sidebar-primary-foreground: 30 20% 97%;
+    --sidebar-accent: 30 10% 88%;
+    --sidebar-accent-foreground: 220 20% 12%;
+    --sidebar-border: 30 10% 88%;
+    --sidebar-ring: 345 45% 28%;
 
     /* Chat tokens */
-    --chat-user: 43 91% 38%;
-    --chat-user-foreground: 0 0% 100%;
-    --chat-ai: 210 14% 96%;
-    --chat-ai-foreground: 210 11% 15%;
+    --chat-user: 345 45% 28%;
+    --chat-user-foreground: 30 20% 97%;
+    --chat-ai: 30 10% 96%;
+    --chat-ai-foreground: 220 20% 12%;
     
-    /* LogosFlow brand - Dourado sofisticado */
-    --gold: 43 91% 38%;
-    --gold-light: 43 70% 70%;
-    --gold-dark: 43 95% 28%;
-    --navy: 215 28% 11%;
-    --navy-light: 215 19% 25%;
+    /* LogosFlow brand - Bordô sofisticado */
+    --gold: 345 45% 28%;
+    --gold-light: 345 30% 55%;
+    --gold-dark: 345 50% 20%;
+    --navy: 220 25% 11%;
+    --navy-light: 220 18% 25%;
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.08), 0 4px 8px -4px rgb(0 0 0 / 0.06);
   }
 
   .dark {
-    /* Paleta refinada - Modo Escuro */
-    --background: 215 28% 11%;
-    --foreground: 210 67% 97%;
+    /* Paleta Theological Elegance - Modo Escuro */
+    --background: 220 22% 10%;
+    --foreground: 30 15% 92%;
 
-    --card: 215 19% 15%;
-    --card-foreground: 0 0% 88%;
+    --card: 220 18% 14%;
+    --card-foreground: 30 10% 88%;
 
-    --popover: 215 19% 15%;
-    --popover-foreground: 0 0% 88%;
+    --popover: 220 18% 14%;
+    --popover-foreground: 30 10% 88%;
 
-    --primary: 43 91% 38%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 345 40% 45%;
+    --primary-foreground: 30 20% 97%;
 
-    --secondary: 215 19% 15%;
-    --secondary-foreground: 0 0% 88%;
+    --secondary: 220 18% 14%;
+    --secondary-foreground: 30 10% 88%;
 
-    --muted: 212 12% 21%;
-    --muted-foreground: 210 9% 58%;
+    --muted: 220 14% 20%;
+    --muted-foreground: 220 8% 55%;
 
-    --accent: 43 70% 25%;
-    --accent-foreground: 43 91% 70%;
+    --accent: 345 35% 25%;
+    --accent-foreground: 345 30% 75%;
 
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 212 12% 21%;
-    --input: 212 12% 21%;
-    --ring: 43 91% 38%;
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 345 40% 45%;
 
-    /* Sidebar - mais escuro que o fundo */
-    --sidebar-background: 215 28% 8%;
-    --sidebar-foreground: 0 0% 88%;
-    --sidebar-primary: 43 91% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 212 12% 18%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 212 12% 21%;
-    --sidebar-ring: 43 91% 38%;
+    /* Sidebar */
+    --sidebar-background: 220 22% 7%;
+    --sidebar-foreground: 30 10% 88%;
+    --sidebar-primary: 345 40% 45%;
+    --sidebar-primary-foreground: 30 20% 97%;
+    --sidebar-accent: 220 14% 17%;
+    --sidebar-accent-foreground: 30 10% 92%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 345 40% 45%;
 
     /* Chat tokens */
-    --chat-user: 43 91% 38%;
-    --chat-user-foreground: 0 0% 100%;
-    --chat-ai: 215 19% 18%;
-    --chat-ai-foreground: 0 0% 88%;
+    --chat-user: 345 40% 45%;
+    --chat-user-foreground: 30 20% 97%;
+    --chat-ai: 220 18% 16%;
+    --chat-ai-foreground: 30 10% 88%;
     
-    /* LogosFlow brand - Dourado sofisticado */
-    --gold: 43 91% 45%;
-    --gold-light: 43 60% 60%;
-    --gold-dark: 43 85% 35%;
-    --navy: 215 28% 8%;
-    --navy-light: 215 19% 20%;
+    /* LogosFlow brand - Bordô sofisticado */
+    --gold: 345 40% 50%;
+    --gold-light: 345 30% 60%;
+    --gold-dark: 345 45% 35%;
+    --navy: 220 22% 7%;
+    --navy-light: 220 18% 18%;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.25), 0 2px 4px -2px rgb(0 0 0 / 0.2);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.25);
+    --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.25), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 12px 24px -4px rgb(0 0 0 / 0.35), 0 4px 8px -4px rgb(0 0 0 / 0.25);
   }
 }
 
@@ -133,6 +133,17 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     letter-spacing: -0.01em;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.015) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, hsl(var(--primary) / 0.01) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  .dark body,
+  body:is(.dark *) {
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, hsl(var(--primary) / 0.02) 0%, transparent 50%);
   }
   
   h1, h2, h3, h4, .font-display, .font-serif {
