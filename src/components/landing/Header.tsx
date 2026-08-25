@@ -40,15 +40,15 @@ const Header = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate("/app")}
+              onClick={() => navigate("/visao-do-ouvinte")}
               className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
             >
-              Experimentar
+              Visão do Ouvinte
             </Button>
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/visao-do-ouvinte")}
               className="hidden sm:inline-flex"
             >
               Entrar
@@ -57,7 +57,7 @@ const Header = () => {
               size="sm"
               onClick={() => navigate("/auth")}
             >
-              Começar
+              Testar agora
             </Button>
           </div>
         </div>

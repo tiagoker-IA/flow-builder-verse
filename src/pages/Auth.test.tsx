@@ -14,9 +14,9 @@ vi.mock("@/hooks/use-toast", () => ({
 
 import Auth from "./Auth";
 
-const renderAuth = () =>
+const renderAuth = (initialEntry = "/auth") =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Auth />
     </MemoryRouter>
   );
@@ -53,6 +53,12 @@ describe("Auth Page", () => {
   it("alterna para modo cadastro", () => {
     renderAuth();
     fireEvent.click(screen.getByText(/não tem uma conta/i));
+    expect(screen.getByRole("button", { name: /cadastrar/i })).toBeInTheDocument();
+    expect(screen.getByLabelText("Confirmar Senha")).toBeInTheDocument();
+  });
+
+  it("abre diretamente no cadastro quando solicitado pela Visão do Ouvinte", () => {
+    renderAuth("/auth?mode=signup&returnTo=/visao-do-ouvinte");
     expect(screen.getByRole("button", { name: /cadastrar/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Confirmar Senha")).toBeInTheDocument();
   });

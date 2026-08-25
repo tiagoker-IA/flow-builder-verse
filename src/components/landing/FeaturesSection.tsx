@@ -1,7 +1,7 @@
 import { 
   BookOpen, 
+  Ear,
   Lightbulb, 
-  PenTool, 
   Sparkles, 
   Target, 
   MessageSquare 
@@ -9,6 +9,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
+  {
+    icon: Ear,
+    title: "Visão do Ouvinte",
+    description: "Perceba dúvidas, trechos pouco claros e possíveis distâncias entre sua intenção e aquilo que a igreja pode compreender."
+  },
   {
     icon: BookOpen,
     title: "Estudo Exegético",
@@ -20,14 +25,9 @@ const features = [
     description: "Geração de ilustrações, metáforas e aplicações práticas para sua mensagem."
   },
   {
-    icon: PenTool,
-    title: "Criar Esboço de Pregação",
-    description: "Organização lógica com introdução, desenvolvimento e conclusão impactantes."
-  },
-  {
     icon: Target,
-    title: "5 Modos Especializados",
-    description: "Escolha entre modos focados em exegese, retórica, prática, apologética ou devocional."
+    title: "Recursos Complementares",
+    description: "Aprofunde exegese, mensagem, devocional e grupos pequenos quando precisar."
   },
   {
     icon: MessageSquare,
@@ -48,10 +48,10 @@ const FeaturesSection = () => {
         {/* Section header */}
         <div className="text-center mb-16">
           <h2 className="font-display text-3xl md:text-4xl font-medium mb-4">
-            Recursos que <span className="text-gradient-gold">potencializam</span> sua mensagem
+            Primeiro, compreenda como a mensagem pode ser <span className="text-gradient-gold">recebida</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Ferramentas desenvolvidas especificamente para pregadores, professores e estudiosos da Bíblia.
+            O LogosFlow parte do trabalho que você já produziu e oferece uma perspectiva adicional, sem tomar o seu lugar.
           </p>
         </div>
 

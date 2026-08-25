@@ -9,17 +9,17 @@ const faqs = [
   {
     question: "O que é o LogosFlow?",
     answer:
-      "É uma plataforma que utiliza inteligência artificial para auxiliar pregadores e líderes na preparação de pregações, estudos bíblicos e reuniões de grupos pequenos — tudo de forma estruturada e teologicamente fundamentada.",
+      "É uma plataforma que oferece ao pregador uma perspectiva adicional sobre o trabalho que ele já produziu. A Visão do Ouvinte mostra como a mensagem pode ser recebida e os demais recursos apoiam exegese, estrutura, aplicação e estudos bíblicos.",
   },
   {
-    question: "Preciso ter conhecimento teológico para usar?",
+    question: "A ferramenta avalia ou dá nota ao meu sermão?",
     answer:
-      "Não. A plataforma foi projetada para ser acessível tanto para iniciantes quanto para pregadores experientes. A IA guia você por cada etapa, oferecendo contexto histórico, exegético e aplicações práticas.",
+      "Não. O LogosFlow não entrega nota nem veredito. Ele identifica como diferentes ouvintes podem compreender a mensagem, apresenta pontos fortes, possíveis dúvidas e perguntas para reflexão. Você decide o que aproveitar.",
   },
   {
     question: "A IA substitui o estudo pessoal da Bíblia?",
     answer:
-      "De forma alguma. A IA funciona como uma ferramenta complementar — ela ajuda a organizar ideias, oferecer contexto e sugerir estruturas, mas o estudo pessoal, a oração e a direção do Espírito Santo permanecem essenciais.",
+      "Não. A IA oferece uma segunda perspectiva, mas pode errar. Estudo pessoal, oração, discernimento, convicções e responsabilidade pastoral continuam pertencendo ao pregador.",
   },
   {
     question: "Quais modos de assistência estão disponíveis?",
@@ -32,14 +32,14 @@ const faqs = [
       "Sim! Você pode exportar suas mensagens e estudos em formato Word (.docx) ou CSV, facilitando a impressão, compartilhamento e uso offline.",
   },
   {
-    question: "É gratuito?",
+    question: "Posso experimentar sem criar uma conta?",
     answer:
-      "Sim, você pode criar sua conta e começar a usar gratuitamente, sem necessidade de cartão de crédito.",
+      "Sim. A primeira Visão do Ouvinte pode ser concluída sem cadastro. Para continuar a conversa, salvar o resultado ou analisar outro esboço, será necessário criar uma conta.",
   },
   {
     question: "Meus dados estão seguros?",
     answer:
-      "Sim. Utilizamos criptografia e autenticação segura para proteger suas informações. Suas conversas e conteúdos são privados e acessíveis apenas por você.",
+      "A leitura de visitante não é salva no histórico da plataforma. Usuários cadastrados têm seus conteúdos vinculados à própria conta. Ainda assim, o texto precisa ser processado por serviços de inteligência artificial para que a análise seja produzida.",
   },
 ];
 

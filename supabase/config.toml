@@ -15,3 +15,5 @@ verify_jwt = false
 [functions.send-auth-email]
 verify_jwt = false
 
+[functions.listener-view]
+verify_jwt = false

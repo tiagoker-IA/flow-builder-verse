@@ -17,24 +17,23 @@ const CTASection = () => {
             
             <div className="relative z-10">
               <h2 className="font-display text-3xl md:text-4xl font-medium mb-4">
-                Pronto para transformar sua <span className="text-gradient-gold">pregação</span>?
+                Antes de pregar, <span className="text-gradient-gold">escute sua mensagem</span> de outro lugar
               </h2>
               <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-                Junte-se a pregadores que já estão usando IA para potencializar suas mensagens 
-                sem perder a autenticidade e a profundidade teológica.
+                Cole seu esboço, esclareça sua intenção e descubra como diferentes ouvintes podem compreender o que você preparou.
               </p>
               
               <Button 
                 size="lg" 
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/visao-do-ouvinte")}
                 className="px-10 py-6 text-lg shadow-elegant hover:shadow-elevated transition-all"
               >
-                Criar Minha Conta Grátis
+                Ver pela perspectiva do ouvinte
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               
               <p className="mt-6 text-sm text-muted-foreground">
-                Sem cartão de crédito • Acesso imediato
+                Primeira leitura sem cadastro • Você decide o que aproveitar
               </p>
             </div>
           </div>

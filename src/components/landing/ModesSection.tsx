@@ -1,40 +1,40 @@
 import { 
   BookMarked, 
-  Mic, 
+  FileText,
   Heart, 
-  Shield, 
-  Sunrise 
+  MessageCircle,
+  Users,
 } from "lucide-react";
 
 const modes = [
   {
     icon: BookMarked,
-    name: "Exegético",
+    name: "Exegese",
     description: "Análise textual rigorosa, contexto histórico-cultural e interpretação fiel.",
     color: "bg-blue-500/10 text-blue-600 dark:text-blue-400"
   },
   {
-    icon: Mic,
-    name: "Retórico",
-    description: "Comunicação persuasiva, estrutura oratória e técnicas de engajamento.",
+    icon: FileText,
+    name: "Mensagem",
+    description: "Organização da ideia central, estrutura, ilustrações, aplicação e conclusão.",
     color: "bg-purple-500/10 text-purple-600 dark:text-purple-400"
   },
   {
     icon: Heart,
-    name: "Prático",
-    description: "Aplicações concretas, ilustrações do cotidiano e transformação de vida.",
+    name: "Devocional",
+    description: "Meditação bíblica, sondagem do coração, centralidade de Cristo e oração.",
     color: "bg-green-500/10 text-green-600 dark:text-green-400"
   },
   {
-    icon: Shield,
-    name: "Apologético",
-    description: "Defesa da fé, argumentação lógica e respostas a objeções comuns.",
+    icon: Users,
+    name: "Grupo Pequeno",
+    description: "Planejamento de encontros, perguntas abertas e aplicações comunitárias.",
     color: "bg-orange-500/10 text-orange-600 dark:text-orange-400"
   },
   {
-    icon: Sunrise,
-    name: "Devocional",
-    description: "Reflexões íntimas, meditação bíblica e crescimento espiritual.",
+    icon: MessageCircle,
+    name: "Livre",
+    description: "Conversa aberta sobre temas bíblicos, teológicos e vida cristã.",
     color: "bg-pink-500/10 text-pink-600 dark:text-pink-400"
   }
 ];
@@ -46,10 +46,10 @@ const ModesSection = () => {
         {/* Section header */}
         <div className="text-center mb-16">
           <h2 className="font-display text-3xl md:text-4xl font-medium mb-4">
-            5 modos de <span className="text-gradient-gold">assistência</span>
+            Outros recursos da <span className="text-gradient-gold">plataforma</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Escolha o tipo de ajuda que você precisa e a IA se adapta ao seu contexto específico.
+            A Visão do Ouvinte é a principal porta de entrada. Os modos já existentes continuam disponíveis como apoio complementar.
           </p>
         </div>
 
