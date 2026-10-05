@@ -17,27 +17,29 @@ const ETAPAS_MENSAGEM = [
 ];
 
 function detectCurrentStage(mensagens: Mensagem[]): number {
-  // Get the last AI message
   const lastAiMessage = [...mensagens].reverse().find(m => m.remetente_ia && m.conteudo);
-  
+
   if (!lastAiMessage?.conteudo) return 0;
-  
+
   const content = lastAiMessage.conteudo.toLowerCase();
-  
-  // Check each stage in reverse order to find the current one
+
   for (let i = ETAPAS_MENSAGEM.length - 1; i >= 0; i--) {
     const etapa = ETAPAS_MENSAGEM[i];
     if (etapa.keywords.some(keyword => content.includes(keyword.toLowerCase()))) {
       return i;
     }
   }
-  
+
   return 0;
 }
 
+function isSermonGuide(mensagens: Mensagem[]): boolean {
+  const lastAiMessage = [...mensagens].reverse().find(m => m.remetente_ia && m.conteudo);
+  return (lastAiMessage?.conteudo ?? "").toLowerCase().includes("o foco da mensagem");
+}
+
 export function ProgressIndicator({ mensagens, modo }: ProgressIndicatorProps) {
-  // Only show for "mensagem" mode
-  if (modo !== "mensagem" || mensagens.length === 0) {
+  if (modo !== "mensagem" || mensagens.length === 0 || !isSermonGuide(mensagens)) {
     return null;
   }
 
@@ -51,7 +53,7 @@ export function ProgressIndicator({ mensagens, modo }: ProgressIndicatorProps) {
             const Icon = etapa.icon;
             const isActive = index === currentStage;
             const isCompleted = index < currentStage;
-            
+
             return (
               <div
                 key={etapa.id}
