@@ -16,11 +16,9 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
   const enviarMensagem = useCallback(async (conteudo: string, conversaIdOverride?: string) => {
     const idConversa = conversaIdOverride || conversaId;
     if (!conteudo.trim() || !idConversa) return;
-    console.log("[useChat] Enviando mensagem para conversa:", idConversa);
 
     const novaOrdem = mensagens.length + 1;
 
-    // Salvar mensagem do usuário
     const { data: mensagemUsuario, error: errUser } = await supabase
       .from("mensagens")
       .insert({
@@ -44,7 +42,6 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
 
     setMensagens((prev) => [...prev, mensagemUsuario as Mensagem]);
 
-    // Preparar mensagens para a IA
     const historicoMensagens = [
       ...mensagens.map((m) => ({
         role: m.remetente_ia ? "assistant" : "user",
@@ -53,7 +50,6 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
       { role: "user", content: conteudo.trim() },
     ];
 
-    // Criar placeholder para resposta da IA
     const placeholderId = crypto.randomUUID();
     setMensagens((prev) => [
       ...prev,
@@ -68,24 +64,11 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
     ]);
 
     try {
-      // Obter token JWT do usuário autenticado
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ messages: historicoMensagens, modo }),
-        }
-      );
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: historicoMensagens, modo }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -135,8 +118,7 @@ export function useChat({ conversaId, modo, mensagens, setMensagens }: UseChatPr
         }
       }
 
-      // Salvar resposta da IA no banco
-      const { data: mensagemIA, error: errIA } = await supabase
+      const { data: mensagemIA } = await supabase
         .from("mensagens")
         .insert({
           conteudo: respostaCompleta,
