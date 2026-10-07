@@ -2,45 +2,44 @@ const PROMPTS: Record<string, string> = {
   mensagem: `Você é o LogosFlow, um mentor de pregadores. Ajuda a compreender e preparar uma mensagem fiel ao texto, sem tomar o lugar do pregador e sem apresentar a resposta como direção divina.
 
 O nome deste modo NÃO é um pedido de sermão. Estar em Mensagem não autoriza esboço.
-
-REGRA DE TAMANHO:
-- Responda ao que a pessoa escreveu, no tamanho que ela pediu.
-- Se ela citar um salmo, um versículo ou um tema sem pedir sermão, explique o texto em poucos parágrafos. Não abra esboço.
-- Não comece com "como você solicitou uma mensagem" se ela não pediu mensagem, esboço ou sermão.
-- Não acrescente a cruz, João 10 nem outro texto se a pessoa não pediu. Não invente o que a passagem não diz.
-- Se ela responder a uma pergunta sua, continue a construção a partir da escolha dela. Não repita a explicação inteira.
-
-CONVITE OBRIGATÓRIO:
-- Nunca termine só com a explicação. A última frase deve ser uma pergunta, para o pregador continuar.
-- Termine exatamente com a linha: Sua vez: responda abaixo.
-
-ESBOÇO, QUANDO PEDIREM:
-- Só se as palavras dela pedirem esboço, pregação, sermão ou preparação para o culto.
-- Na primeira resposta, NÃO entregue o guia completo.
-- Uma observação curta e uma pergunta. Só avance depois da resposta dela.
-- O guia inteiro só se ela pedir o esboço completo agora.`,
-  exegese: `Você é o LogosFlow, um mentor teológico. Explique o texto com fidelidade. Não invente. Se a pessoa responder, continue a partir da resposta. Termine com uma pergunta e com a linha: Sua vez: responda abaixo.`,
-  devocional: `Você é o LogosFlow, um guia devocional. Conduza à meditação no texto, sem autoajuda. Se a pessoa responder, continue a partir da resposta. Termine com uma pergunta e com a linha: Sua vez: responda abaixo.`,
-  grupo_pequeno: `Você é o LogosFlow e prepara um roteiro de grupo pequeno fiel ao texto. Não entregue o roteiro inteiro de uma vez. Se a pessoa responder, continue a partir da resposta. Termine com uma pergunta e com a linha: Sua vez: responda abaixo.`,
-  livre: `Você é o LogosFlow, um assistente de preparação bíblica. Responda ao que foi pedido. Se a pessoa responder, continue a partir da resposta. Termine com uma pergunta e com a linha: Sua vez: responda abaixo.`,
+- Responda ao que a pessoa escreveu, no tamanho pedido. Sem sermão, a menos que peça esboço, pregação ou sermão.
+- Se ela responder a uma pergunta sua, continue a partir da escolha dela. Não repita a explicação inteira.
+- Não entregue o esboço completo de uma vez. Uma observação e uma pergunta.
+- Termine exatamente com a linha: Sua vez: responda abaixo.`,
+  exegese: `Você é o LogosFlow. Explique o texto com fidelidade. Se a pessoa responder, continue a partir da resposta. Termine com: Sua vez: responda abaixo.`,
+  devocional: `Você é o LogosFlow. Conduza à meditação no texto. Se a pessoa responder, continue a partir da resposta. Termine com: Sua vez: responda abaixo.`,
+  grupo_pequeno: `Você é o LogosFlow. Prepare o grupo pequeno sem entregar o roteiro inteiro de uma vez. Se a pessoa responder, continue. Termine com: Sua vez: responda abaixo.`,
+  livre: `Você é o LogosFlow. Responda ao que foi pedido. Se a pessoa responder, continue. Termine com: Sua vez: responda abaixo.`,
 };
 
-const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-2.0-flash"];
+const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"];
 const CONVITE = "\n\nSua vez: responda abaixo.";
 
 function sse(content: string) {
   return `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
 }
 
+async function pedirModelo(model: string, key: string, modo: string, contents: unknown) {
+  return fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
+        contents,
+        generationConfig: { temperature: modo === "exegese" ? 0.3 : 0.4 },
+      }),
+    }
+  );
+}
+
 export default async (req: Request) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Método não permitido" }), { status: 405 });
   }
-
   const key = Netlify.env.get("GEMINI_API_KEY");
-  if (!key) {
-    return new Response(JSON.stringify({ error: "Chave do Gemini ausente" }), { status: 500 });
-  }
+  if (!key) return new Response(JSON.stringify({ error: "Chave do Gemini ausente" }), { status: 500 });
 
   const body = await req.json().catch(() => null);
   const messages = body?.messages;
@@ -48,7 +47,6 @@ export default async (req: Request) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return new Response(JSON.stringify({ error: "Campo messages é obrigatório" }), { status: 400 });
   }
-
   const contents = messages.slice(-20).map((message: { role?: string; content?: string }) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: String(message.content ?? "") }],
@@ -57,24 +55,14 @@ export default async (req: Request) => {
   let gemini: Response | null = null;
   const failures: string[] = [];
   for (const model of MODELS) {
-    gemini = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": key,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
-          contents,
-          generationConfig: { temperature: modo === "exegese" ? 0.3 : 0.4 },
-        }),
-      }
-    );
-    if (gemini.ok && gemini.body) break;
-    failures.push(`${model} ${gemini.status}`);
-    gemini = null;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      gemini = await pedirModelo(model, key, modo, contents);
+      if (gemini.ok && gemini.body) break;
+      failures.push(`${model} ${gemini.status}`);
+      gemini = null;
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+    if (gemini?.body) break;
   }
 
   if (!gemini?.body) {
@@ -87,7 +75,6 @@ export default async (req: Request) => {
   const decoder = new TextDecoder();
   let buffer = "";
   let texto = "";
-
   const stream = new ReadableStream({
     async pull(controller) {
       const { done, value } = await reader.read();
@@ -97,7 +84,6 @@ export default async (req: Request) => {
         controller.close();
         return;
       }
-
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
@@ -119,10 +105,7 @@ export default async (req: Request) => {
       }
     },
   });
-
-  return new Response(stream, {
-    headers: { "Content-Type": "text/event-stream" },
-  });
+  return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
 };
 
 export const config = { path: "/api/chat" };
