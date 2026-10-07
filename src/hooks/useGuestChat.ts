@@ -19,7 +19,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
 
     const novaOrdem = mensagens.length + 1;
 
-    // Add user message locally
     const mensagemUsuario: Mensagem = {
       id: crypto.randomUUID(),
       conteudo: conteudo.trim(),
@@ -33,7 +32,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
     setMensagens(msgsComUsuario);
     persistMensagens(idConversa, msgsComUsuario);
 
-    // Prepare history for AI
     const historicoMensagens = [
       ...mensagens.map((m) => ({
         role: m.remetente_ia ? "assistant" : "user",
@@ -42,7 +40,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
       { role: "user", content: conteudo.trim() },
     ];
 
-    // Placeholder for AI response
     const placeholderId = crypto.randomUUID();
     setMensagens((prev) => [
       ...prev,
@@ -57,20 +54,11 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
     ]);
 
     try {
-      // Use anon key for guest requests
-      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-ai`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${anonKey}`,
-          },
-          body: JSON.stringify({ messages: historicoMensagens, modo }),
-        }
-      );
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: historicoMensagens, modo }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -120,7 +108,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
         }
       }
 
-      // Replace placeholder with final message and persist
       const mensagemFinal: Mensagem = {
         id: crypto.randomUUID(),
         conteudo: respostaCompleta,
