@@ -25,14 +25,8 @@ export default function AppDashboard() {
   const [isSending, setIsSending] = useState(false);
 
   const isGuest = !authLoading && !user;
-
-  // Authenticated hooks
   const authConversas = useConversas(user?.id);
-
-  // Guest hooks
   const guestConversas = useGuestConversas();
-
-  // Pick the right set based on auth state
   const {
     conversas,
     conversaAtual,
@@ -51,7 +45,6 @@ export default function AppDashboard() {
     mensagens,
     setMensagens,
   });
-
   const guestChat = useGuestChat({
     conversaId: conversaAtual?.id || "",
     modo: (conversaAtual?.modo as ChatMode) || modo,
@@ -59,15 +52,12 @@ export default function AppDashboard() {
     setMensagens,
     persistMensagens: guestConversas.persistMensagens,
   });
-
   const { enviarMensagem } = isGuest ? guestChat : authChat;
+  const suaVez = !isSending && mensagens.length > 0 && Boolean(mensagens[mensagens.length - 1]?.remetente_ia);
 
   const handleNovaConversa = async () => {
     await criarConversa(modo);
-    toast({
-      title: "Nova conversa criada",
-      description: "Você pode começar a digitar sua pergunta.",
-    });
+    toast({ title: "Nova conversa criada", description: "Você pode começar a digitar sua pergunta." });
   };
 
   const handleEnviarMensagem = async (conteudo: string) => {
@@ -75,9 +65,7 @@ export default function AppDashboard() {
     try {
       if (!conversaAtual) {
         const novaConversa = await criarConversa(modo);
-        if (novaConversa) {
-          await enviarMensagem(conteudo, novaConversa.id);
-        }
+        if (novaConversa) await enviarMensagem(conteudo, novaConversa.id);
       } else {
         await enviarMensagem(conteudo);
       }
@@ -90,16 +78,12 @@ export default function AppDashboard() {
 
   const handleDeletarConversa = async (id: string) => {
     await deletarConversa(id);
-    toast({
-      title: "Conversa deletada",
-      variant: "destructive",
-    });
+    toast({ title: "Conversa deletada", variant: "destructive" });
   };
 
   const handleLogout = async () => {
-    if (isGuest) {
-      navigate("/auth");
-    } else {
+    if (isGuest) navigate("/auth");
+    else {
       await signOut();
       navigate("/auth");
     }
@@ -138,31 +122,18 @@ export default function AppDashboard() {
           mensagens={mensagens}
           isGuest={isGuest}
         />
-
-        {/* Guest banner */}
-         {isGuest && <GuestBanner />}
-        
-        {/* Mobile mode selector */}
-          <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
-            <ModoSelector modo={modo} onModoChange={setModo} />
-          </div>
-          
-          {/* Progress indicator for message mode */}
-          <ProgressIndicator 
-            mensagens={mensagens} 
-            modo={conversaAtual?.modo || modo} 
-          />
-          
-          <ChatMessages 
-            mensagens={mensagens} 
-            isLoading={isSending} 
-            onEnviarSugestao={handleEnviarMensagem}
-            modo={(conversaAtual?.modo as ChatMode) || modo}
-          />
-          <ChatInput 
-            onEnviar={handleEnviarMensagem} 
-            isLoading={isSending}
-          />
+        {isGuest && <GuestBanner />}
+        <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
+          <ModoSelector modo={modo} onModoChange={setModo} />
+        </div>
+        <ProgressIndicator mensagens={mensagens} modo={conversaAtual?.modo || modo} />
+        <ChatMessages
+          mensagens={mensagens}
+          isLoading={isSending}
+          onEnviarSugestao={handleEnviarMensagem}
+          modo={(conversaAtual?.modo as ChatMode) || modo}
+        />
+        <ChatInput onEnviar={handleEnviarMensagem} isLoading={isSending} suaVez={suaVez} />
       </div>
     </div>
   );
