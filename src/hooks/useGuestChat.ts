@@ -10,6 +10,53 @@ interface UseGuestChatProps {
   persistMensagens: (conversaId: string, msgs: Mensagem[]) => void;
 }
 
+async function lerResposta(response: Response, onTexto: (texto: string) => void) {
+  if (!response.body) throw new Error("Resposta vazia");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let respostaCompleta = "";
+  let textBuffer = "";
+  let encerrado = false;
+
+  while (!encerrado) {
+    const leitura = await Promise.race([
+      reader.read().then((item) => ({ ...item, timeout: false })),
+      new Promise<{ done: boolean; value?: Uint8Array; timeout: boolean }>((resolve) =>
+        setTimeout(() => resolve({ done: true, timeout: true }), 20000)
+      ),
+    ]);
+    if (leitura.done || leitura.timeout) break;
+    textBuffer += decoder.decode(leitura.value, { stream: true });
+    let newlineIndex: number;
+    while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+      let line = textBuffer.slice(0, newlineIndex);
+      textBuffer = textBuffer.slice(newlineIndex + 1);
+      if (line.endsWith("\r")) line = line.slice(0, -1);
+      if (line.startsWith(":") || line.trim() === "") continue;
+      if (!line.startsWith("data: ")) continue;
+      const jsonStr = line.slice(6).trim();
+      if (jsonStr === "[DONE]") {
+        encerrado = true;
+        break;
+      }
+      try {
+        const parsed = JSON.parse(jsonStr);
+        const content = parsed.choices?.[0]?.delta?.content;
+        if (content) {
+          respostaCompleta += content;
+          onTexto(respostaCompleta);
+        }
+      } catch {
+        textBuffer = line + "\n" + textBuffer;
+        break;
+      }
+    }
+  }
+
+  try { await reader.cancel(); } catch { /* a leitura já acabou */ }
+  return respostaCompleta;
+}
+
 export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persistMensagens }: UseGuestChatProps) {
   const { toast } = useToast();
 
@@ -18,7 +65,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
     if (!conteudo.trim() || !idConversa) return;
 
     const novaOrdem = mensagens.length + 1;
-
     const mensagemUsuario: Mensagem = {
       id: crypto.randomUUID(),
       conteudo: conteudo.trim(),
@@ -27,7 +73,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
       ordem: novaOrdem,
       created_at: new Date().toISOString(),
     };
-
     const msgsComUsuario = [...mensagens, mensagemUsuario];
     setMensagens(msgsComUsuario);
     persistMensagens(idConversa, msgsComUsuario);
@@ -39,7 +84,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
       })),
       { role: "user", content: conteudo.trim() },
     ];
-
     const placeholderId = crypto.randomUUID();
     setMensagens((prev) => [
       ...prev,
@@ -59,55 +103,13 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: historicoMensagens, modo }),
       });
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Erro ao conectar com a IA");
       }
-
-      if (!response.body) throw new Error("Resposta vazia");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let respostaCompleta = "";
-      let textBuffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              respostaCompleta += content;
-              setMensagens((prev) =>
-                prev.map((m) =>
-                  m.id === placeholderId ? { ...m, conteudo: respostaCompleta } : m
-                )
-              );
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-
+      const respostaCompleta = await lerResposta(response, (texto) => {
+        setMensagens((prev) => prev.map((m) => (m.id === placeholderId ? { ...m, conteudo: texto } : m)));
+      });
       const mensagemFinal: Mensagem = {
         id: crypto.randomUUID(),
         conteudo: respostaCompleta,
@@ -116,7 +118,6 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
         ordem: novaOrdem + 1,
         created_at: new Date().toISOString(),
       };
-
       setMensagens((prev) => {
         const updated = prev.map((m) => (m.id === placeholderId ? mensagemFinal : m));
         persistMensagens(idConversa, updated);
