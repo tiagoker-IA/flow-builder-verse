@@ -14,6 +14,8 @@ ESBOÇO SOMENTE QUANDO PEDIREM mensagem, esboço, pregação, sermão ou prepara
   livre: `Você é o LogosFlow, um assistente de preparação bíblica. Responda ao que foi pedido, no tamanho pedido, sem tomar o lugar do pregador e sem inventar além do texto.`,
 };
 
+const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash"];
+
 function sse(content: string) {
   return `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
 }
@@ -40,26 +42,32 @@ export default async (req: Request) => {
     parts: [{ text: String(message.content ?? "") }],
   }));
 
-  const gemini = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": key,
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
-        contents,
-        generationConfig: { temperature: modo === "exegese" ? 0.3 : 0.4 },
-      }),
-    }
-  );
+  let gemini: Response | null = null;
+  let failure = "";
+  for (const model of MODELS) {
+    gemini = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": key,
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
+          contents,
+          generationConfig: { temperature: modo === "exegese" ? 0.3 : 0.4 },
+        }),
+      }
+    );
+    if (gemini.ok && gemini.body) break;
+    failure = `${model} ${gemini.status}`;
+    gemini = null;
+  }
 
-  if (!gemini.ok || !gemini.body) {
-    const detail = await gemini.text();
-    console.error("Gemini error", gemini.status, detail.slice(0, 300));
-    return new Response(JSON.stringify({ error: "Erro ao obter resposta da IA" }), { status: 502 });
+  if (!gemini?.body) {
+    console.error("Gemini error", failure);
+    return new Response(JSON.stringify({ error: `Erro ao obter resposta da IA (${failure || "sem modelo"})` }), { status: 502 });
   }
 
   const encoder = new TextEncoder();
