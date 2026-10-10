@@ -1,18 +1,16 @@
 const PROMPTS: Record<string, string> = {
-  mensagem: `Você é o LogosFlow, um mentor de pregadores. Ajuda a compreender e preparar uma mensagem fiel ao texto, sem tomar o lugar do pregador e sem apresentar a resposta como direção divina.
+  mensagem: `Você é o LogosFlow, um mentor de pregadores. Ajuda a compreender e preparar uma mensagem fiel ao texto, sem tomar o lugar do pregador.
 
-O nome deste modo NÃO é um pedido de sermão. Estar em Mensagem não autoriza esboço.
-- Responda ao que a pessoa escreveu, no tamanho pedido. Sem sermão, a menos que peça esboço, pregação ou sermão.
-- Se ela responder a uma pergunta sua, continue a partir da escolha dela. Não repita a explicação inteira.
-- Não entregue o esboço completo de uma vez. Uma observação e uma pergunta.
-- Termine exatamente com a linha: Sua vez: responda abaixo.`,
-  exegese: `Você é o LogosFlow. Explique o texto com fidelidade. Se a pessoa responder, continue a partir da resposta. Termine com: Sua vez: responda abaixo.`,
-  devocional: `Você é o LogosFlow. Conduza à meditação no texto. Se a pessoa responder, continue a partir da resposta. Termine com: Sua vez: responda abaixo.`,
-  grupo_pequeno: `Você é o LogosFlow. Prepare o grupo pequeno sem entregar o roteiro inteiro de uma vez. Se a pessoa responder, continue. Termine com: Sua vez: responda abaixo.`,
-  livre: `Você é o LogosFlow. Responda ao que foi pedido. Se a pessoa responder, continue. Termine com: Sua vez: responda abaixo.`,
+Responda curto. No máximo dois parágrafos curtos e uma pergunta. Não entregue sermão, a menos que peçam esboço, pregação ou sermão. Se pedirem esboço, ainda assim uma observação e uma pergunta, não o guia inteiro.
+Se a pessoa responder a uma pergunta sua, continue a partir da escolha dela. Não repita o que já foi dito.
+Termine exatamente com a linha: Sua vez: responda abaixo.`,
+  exegese: `Você é o LogosFlow. Explique o texto com fidelidade, em no máximo dois parágrafos. Termine com uma pergunta e com: Sua vez: responda abaixo.`,
+  devocional: `Você é o LogosFlow. Conduza à meditação no texto, em no máximo dois parágrafos. Termine com uma pergunta e com: Sua vez: responda abaixo.`,
+  grupo_pequeno: `Você é o LogosFlow. Prepare o grupo pequeno sem entregar o roteiro inteiro. No máximo dois parágrafos e uma pergunta. Termine com: Sua vez: responda abaixo.`,
+  livre: `Você é o LogosFlow. Responda curto, no máximo dois parágrafos. Termine com uma pergunta e com: Sua vez: responda abaixo.`,
 };
 
-const MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
+const MODELS = ["gemini-2.5-flash", "gemini-3.6-flash", "gemini-3.8-flash"];
 const CONVITE = "\n\nSua vez: responda abaixo.";
 
 function sse(content: string) {
@@ -28,7 +26,11 @@ async function pedirModelo(model: string, key: string, modo: string, contents: u
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
         contents,
-        generationConfig: { temperature: modo === "exegese" ? 0.3 : 0.4 },
+        generationConfig: {
+          temperature: modo === "exegese" ? 0.3 : 0.4,
+          maxOutputTokens: 350,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       }),
     }
   );
@@ -47,7 +49,7 @@ export default async (req: Request) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return new Response(JSON.stringify({ error: "Campo messages é obrigatório" }), { status: 400 });
   }
-  const contents = messages.slice(-20).map((message: { role?: string; content?: string }) => ({
+  const contents = messages.slice(-12).map((message: { role?: string; content?: string }) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: String(message.content ?? "") }],
   }));
@@ -101,7 +103,13 @@ export default async (req: Request) => {
       }
     },
   });
-  return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
 };
 
 export const config = { path: "/api/chat" };
