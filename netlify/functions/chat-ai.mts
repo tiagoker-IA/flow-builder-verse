@@ -12,7 +12,7 @@ O nome deste modo NÃO é um pedido de sermão. Estar em Mensagem não autoriza 
   livre: `Você é o LogosFlow. Responda ao que foi pedido. Se a pessoa responder, continue. Termine com: Sua vez: responda abaixo.`,
 };
 
-const MODELS = ["gemini-3-flash-preview", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"];
+const MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
 const CONVITE = "\n\nSua vez: responda abaixo.";
 
 function sse(content: string) {
@@ -55,14 +55,10 @@ export default async (req: Request) => {
   let gemini: Response | null = null;
   const failures: string[] = [];
   for (const model of MODELS) {
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      gemini = await pedirModelo(model, key, modo, contents);
-      if (gemini.ok && gemini.body) break;
-      failures.push(`${model} ${gemini.status}`);
-      gemini = null;
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 1500));
-    }
-    if (gemini?.body) break;
+    gemini = await pedirModelo(model, key, modo, contents);
+    if (gemini.ok && gemini.body) break;
+    failures.push(`${model} ${gemini.status}`);
+    gemini = null;
   }
 
   if (!gemini?.body) {
