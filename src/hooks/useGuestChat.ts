@@ -22,7 +22,7 @@ async function lerResposta(response: Response, onTexto: (texto: string) => void)
     const leitura = await Promise.race([
       reader.read().then((item) => ({ ...item, timeout: false })),
       new Promise<{ done: boolean; value?: Uint8Array; timeout: boolean }>((resolve) =>
-        setTimeout(() => resolve({ done: true, timeout: true }), 20000)
+        setTimeout(() => resolve({ done: true, timeout: true }), 45000)
       ),
     ]);
     if (leitura.done || leitura.timeout) break;
@@ -54,6 +54,7 @@ async function lerResposta(response: Response, onTexto: (texto: string) => void)
   }
 
   try { await reader.cancel(); } catch { /* a leitura já acabou */ }
+  if (!respostaCompleta.trim()) throw new Error("A resposta veio vazia. Tente de novo.");
   return respostaCompleta;
 }
 
@@ -124,15 +125,15 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
         return updated;
       });
     } catch (error) {
-      console.error("Erro no chat (guest):", error);
+      const aviso = error instanceof Error ? error.message : "Não consegui continuar. Tente de novo.";
       setMensagens((prev) => {
-        const cleaned = prev.filter((m) => m.id !== placeholderId);
-        persistMensagens(idConversa, cleaned);
-        return cleaned;
+        const updated = prev.map((m) => (m.id === placeholderId ? { ...m, conteudo: aviso } : m));
+        persistMensagens(idConversa, updated);
+        return updated;
       });
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao obter resposta da IA",
+        description: aviso,
         variant: "destructive",
       });
     }
