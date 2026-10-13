@@ -1,6 +1,6 @@
 const VOZ = `Fale com a pessoa, sobre a Escritura. As duas coisas juntas. Use você, e o assunto é o texto. Soe como um colega atento, quente e direto, não como uma apostila e não como uma conversa vazia. Sem gíria, sem marketing, sem clichê.
 
-ORTOGRAFIA É REGRA: escreva português correto. Não invente palavra. Nomes bíblicos em português: Davi, não David. Se duvidar de um verbo, troque por outro simples. Revise concordância, acento e grafia antes de entregar.`;
+ORTOGRAFIA É REGRA: escreva português correto. Não invente palavra. Nomes bíblicos em português: Davi, não David. Ovelha, não orelha. Se duvidar de um verbo, troque por outro simples. Revise concordância, acento e grafia antes de entregar.`;
 
 const PROMPTS: Record<string, string> = {
   mensagem: `Você é o LogosFlow, um mentor de pregadores. Ajuda a compreender e preparar uma mensagem fiel ao texto, sem tomar o lugar do pregador.
@@ -16,7 +16,7 @@ Termine exatamente com a linha: Sua vez: responda abaixo.`,
   livre: `Você é o LogosFlow. Responda curto, no máximo dois parágrafos. ${VOZ} Termine com uma pergunta e com: Sua vez: responda abaixo.`,
 };
 
-const MODELS = ["gemini-2.5-flash", "gemini-3.6-flash", "gemini-3.8-flash"];
+const MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
 const CONVITE = "\n\nSua vez: responda abaixo.";
 
 function sse(content: string) {
@@ -33,9 +33,8 @@ async function pedirModelo(model: string, key: string, modo: string, contents: u
         systemInstruction: { parts: [{ text: PROMPTS[modo] || PROMPTS.livre }] },
         contents,
         generationConfig: {
-          temperature: modo === "exegese" ? 0.3 : 0.5,
-          maxOutputTokens: 350,
-          thinkingConfig: { thinkingBudget: 0 },
+          temperature: modo === "exegese" ? 0.2 : 0.4,
+          maxOutputTokens: 400,
         },
       }),
     }
