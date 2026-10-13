@@ -16,7 +16,7 @@ Termine exatamente com a linha: Sua vez: responda abaixo.`,
   livre: `Você é o LogosFlow. Responda curto, no máximo dois parágrafos. ${VOZ} Termine com uma pergunta e com: Sua vez: responda abaixo.`,
 };
 
-const MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
+const MODELS = ["gemini-3.6-flash", "gemini-2.5-flash"];
 const CONVITE = "\n\nSua vez: responda abaixo.";
 
 function sse(content: string) {
@@ -35,6 +35,7 @@ async function pedirModelo(model: string, key: string, modo: string, contents: u
         generationConfig: {
           temperature: modo === "exegese" ? 0.2 : 0.4,
           maxOutputTokens: 400,
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     }
