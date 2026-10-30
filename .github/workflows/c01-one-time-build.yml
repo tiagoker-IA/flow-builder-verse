@@ -1,0 +1,29 @@
+name: "C-01 | Verificacao pontual, sem deploy"
+on:
+  push:
+    branches:
+      - c01/colaboracao-pregador-20261030
+    paths:
+      - .github/workflows/c01-one-time-build.yml
+permissions:
+  contents: read
+jobs:
+  build:
+    name: "Build Vite e checagem TypeScript"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: "true"
+    steps:
+      - name: Checkout da branch isolada
+        uses: actions/checkout@v4
+      - name: Instalar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Instalar dependencias do lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Compilar a aplicacao
+        run: npm run build
+      - name: Verificar TypeScript da aplicacao
+        run: ./node_modules/.bin/tsc --noEmit --project tsconfig.app.json
