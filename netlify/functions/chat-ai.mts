@@ -65,18 +65,21 @@ export default async (req: Request) => {
     parts: [{ text: String(message.content ?? "") }],
   }));
 
-  let gemini: Response | null = null;
-  const failures: string[] = [];
-  for (const model of MODELS) {
-    gemini = await pedirModelo(model, key, modo, contents);
-    if (gemini.ok && gemini.body) break;
-    failures.push(`${model} ${gemini.status}`);
-    gemini = null;
+  // Uma solicitação por interação. Não repetir uma chamada em outro modelo ao
+  // receber erro de configuração, quota ou indisponibilidade.
+  const selectedModel = Netlify.env.get("GEMINI_MODEL") || MODELS[0];
+  if (!MODELS.includes(selectedModel)) {
+    return new Response(JSON.stringify({ error: "Modelo configurado não permitido" }), { status: 500 });
   }
-
-  if (!gemini?.body) {
-    console.error("Gemini error", failures.join("; "));
-    return new Response(JSON.stringify({ error: `Não consegui continuar. Tente de novo. (${failures.join("; ")})` }), { status: 502 });
+  let gemini: Response;
+  try {
+    gemini = await pedirModelo(selectedModel, key, modo, contents);
+  } catch {
+    return new Response(JSON.stringify({ error: "Não foi possível conectar ao modelo. Nenhuma nova tentativa foi feita." }), { status: 502 });
+  }
+  if (!gemini.ok || !gemini.body) {
+    console.error("Gemini error", `${selectedModel} ${gemini.status}`);
+    return new Response(JSON.stringify({ error: "Não consegui continuar com o modelo configurado. Nenhuma nova tentativa foi feita." }), { status: 502 });
   }
 
   const encoder = new TextEncoder();
