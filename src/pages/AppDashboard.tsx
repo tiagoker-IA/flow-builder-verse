@@ -10,7 +10,6 @@ import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ModoSelector } from "@/components/chat/ModoSelector";
-import { ProgressIndicator } from "@/components/chat/ProgressIndicator";
 import { GuestBanner } from "@/components/chat/GuestBanner";
 
 import { ChatMode } from "@/types/chat";
@@ -53,7 +52,6 @@ export default function AppDashboard() {
     persistMensagens: guestConversas.persistMensagens,
   });
   const { enviarMensagem } = isGuest ? guestChat : authChat;
-  const suaVez = !isSending && mensagens.length > 0 && Boolean(mensagens[mensagens.length - 1]?.remetente_ia);
 
   const handleNovaConversa = async () => {
     await criarConversa(modo);
@@ -126,14 +124,13 @@ export default function AppDashboard() {
         <div className="md:hidden px-4 py-2 border-b border-border bg-muted/30">
           <ModoSelector modo={modo} onModoChange={setModo} />
         </div>
-        <ProgressIndicator mensagens={mensagens} modo={conversaAtual?.modo || modo} />
         <ChatMessages
           mensagens={mensagens}
           isLoading={isSending}
           onEnviarSugestao={handleEnviarMensagem}
           modo={(conversaAtual?.modo as ChatMode) || modo}
         />
-        <ChatInput onEnviar={handleEnviarMensagem} isLoading={isSending} suaVez={suaVez} />
+        <ChatInput onEnviar={handleEnviarMensagem} isLoading={isSending} />
       </div>
     </div>
   );
