@@ -24,6 +24,10 @@ function sse(content: string) {
   return `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
 }
 
+function sseError(code: string, message: string) {
+  return "data: " + JSON.stringify({ error: { code, message } }) + "\n\n";
+}
+
 async function pedirModelo(model: string, key: string, modo: string, contents: unknown) {
   return fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
@@ -60,9 +64,28 @@ export default async (req: Request) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return new Response(JSON.stringify({ error: "Campo messages é obrigatório" }), { status: 400 });
   }
-  const contents = messages.slice(-12).map((message: { role?: string; content?: string }) => ({
+  // Política recuperada da implementação local: nunca apagar decisões do pregador silenciosamente.
+  // Limites locais de proteção, não limites oficiais de tokens do Gemini.
+  const MAX_CONTEXT_MESSAGES = 128;
+  const MAX_CONTEXT_BYTES = 64 * 1024;
+  const MAX_MESSAGE_BYTES = 16 * 1024;
+  if (messages.length > MAX_CONTEXT_MESSAGES) {
+    return new Response(JSON.stringify({ error: "Esta conversa ultrapassou o limite de mensagens. Nenhuma parte do histórico foi descartada ou enviada; preserve as decisões essenciais em uma nova conversa." }), { status: 413 });
+  }
+  if (messages.some((message: { role?: unknown; content?: unknown }) =>
+    !message || (message.role !== "user" && message.role !== "assistant") ||
+    typeof message.content !== "string" || !message.content.trim() ||
+    new TextEncoder().encode(message.content).byteLength > MAX_MESSAGE_BYTES)) {
+    return new Response(JSON.stringify({ error: "Uma das mensagens tem formato inválido ou excede 16 KiB. Nenhuma mensagem foi enviada." }), { status: 400 });
+  }
+  const instruction = PROMPTS[modo] || PROMPTS.livre;
+  const serialized = JSON.stringify({ instruction, messages });
+  if (new TextEncoder().encode(serialized).byteLength > MAX_CONTEXT_BYTES) {
+    return new Response(JSON.stringify({ error: "A conversa ultrapassou o limite seguro de contexto. Nenhuma mensagem foi descartada ou enviada; reduza o material preservando as decisões essenciais." }), { status: 413 });
+  }
+  const contents = messages.map((message: { role: "assistant" | "user"; content: string }) => ({
     role: message.role === "assistant" ? "model" : "user",
-    parts: [{ text: String(message.content ?? "") }],
+    parts: [{ text: message.content }],
   }));
 
   // Uma solicitação por interação. Não repetir uma chamada em outro modelo ao
@@ -84,35 +107,81 @@ export default async (req: Request) => {
 
   const encoder = new TextEncoder();
   const reader = gemini.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
   let buffer = "";
-  const stream = new ReadableStream({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-        return;
-      }
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) {
+  let visibleText = false;
+  let finishReason: string | null = null;
+  let eventCount = 0;
+  const MAX_SSE_EVENT_CHARS = 256 * 1024;
+  const MAX_SSE_EVENTS = 4096;
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const sendFailure = (code: string, message: string) => {
+        controller.enqueue(encoder.encode(sseError(code, message)));
+      };
+      const processLine = (line: string) => {
         const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
+        if (!trimmed.startsWith("data:")) return;
         const raw = trimmed.slice(5).trim();
-        if (!raw || raw === "[DONE]") continue;
-        try {
-          const parsed = JSON.parse(raw);
-          const part = parsed.candidates?.[0]?.content?.parts?.map((item: { text?: string }) => item.text ?? "").join("") ?? "";
-          if (part) {
-            controller.enqueue(encoder.encode(sse(part)));
-          }
-        } catch {
-          buffer = `${trimmed}\n${buffer}`;
+        if (!raw || raw === "[DONE]") return; // Marcador de transporte não equivale a STOP.
+        eventCount += 1;
+        if (eventCount > MAX_SSE_EVENTS) throw new Error("stream_protocol_error");
+        let parsed: any;
+        try { parsed = JSON.parse(raw); }
+        catch { throw new Error("stream_protocol_error"); }
+        if (parsed?.error || parsed?.promptFeedback?.blockReason) throw new Error("response_blocked");
+        const candidate = parsed?.candidates?.[0];
+        if (!candidate) return;
+        if (candidate.finishReason != null) {
+          if (typeof candidate.finishReason !== "string") throw new Error("stream_protocol_error");
+          finishReason = candidate.finishReason;
         }
+        const parts = candidate?.content?.parts;
+        if (Array.isArray(parts)) for (const part of parts) {
+          if (part?.thought === true) continue; // Não emitir raciocínio interno.
+          if (typeof part?.text === "string" && part.text) {
+            visibleText = true;
+            controller.enqueue(encoder.encode(sse(part.text)));
+          }
+        }
+      };
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          if (buffer.length > MAX_SSE_EVENT_CHARS) throw new Error("stream_protocol_error");
+          let newline = buffer.indexOf("\n");
+          while (newline >= 0) {
+            const line = buffer.slice(0, newline);
+            buffer = buffer.slice(newline + 1);
+            processLine(line);
+            newline = buffer.indexOf("\n");
+          }
+        }
+        buffer += decoder.decode();
+        if (buffer.trim()) processLine(buffer);
+        if (finishReason === "STOP" && visibleText) {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        } else if (finishReason === "MAX_TOKENS") {
+          sendFailure("response_truncated", "A geração atingiu o limite e não terminou. Nenhuma resposta parcial foi salva como completa.");
+        } else if (finishReason === "SAFETY" || finishReason === "RECITATION") {
+          sendFailure("response_blocked", "A geração foi bloqueada e não foi concluída.");
+        } else {
+          sendFailure("stream_incomplete", "A conexão terminou sem confirmar a resposta completa.");
+        }
+      } catch (error) {
+        const code = error instanceof Error && error.message === "response_blocked"
+          ? "response_blocked" : "stream_incomplete";
+        try { sendFailure(code, code === "response_blocked" ? "A resposta foi bloqueada." : "A geração foi interrompida. O texto recebido pode estar incompleto."); }
+        catch { /* Leitor encerrado pelo cliente. */ }
+      } finally {
+        try { await reader.cancel(); } catch { /* Leitor já finalizado. */ }
+        try { controller.close(); } catch { /* Cliente cancelou. */ }
       }
     },
+    cancel() { void reader.cancel(); },
   });
   return new Response(stream, {
     headers: {
