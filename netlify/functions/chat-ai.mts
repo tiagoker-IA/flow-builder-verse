@@ -18,7 +18,8 @@ const PROMPTS: Record<string, string> = {
   livre: `MODO CONVERSA LIVRE. Responda sem forçar sermões, modelos de aula ou perguntas. Preserve o contexto e siga o pedido efetivo, inclusive quando ele mudar de direção.\n\n${VOZ}`,
 };
 
-const MODELS = ["gemini-3.6-flash", "gemini-2.5-flash"];
+// Preferir o Flash estável mais recente; outros modelos apenas por escolha explícita.
+const MODELS = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-2.5-flash"];
 
 function sse(content: string) {
   return `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`;
@@ -41,10 +42,10 @@ async function pedirModelo(model: string, key: string, modo: string, contents: u
           temperature: modo === "exegese" ? 0.2 : 0.4,
           // Teto de saída, não tamanho obrigatório; uso real depende de homologação de custos.
           maxOutputTokens: 4096,
-          // O Gemini 3 usa thinkingLevel; 2.5 preserva a configuração de orçamento legada.
-          thinkingConfig: model === "gemini-3.6-flash"
-            ? { thinkingLevel: modo === "exegese" ? "medium" : "low" }
-            : { thinkingBudget: 0 },
+          // Gemini 3.8/3.6 usa thinkingLevel; Gemini 2.5 usa thinkingBudget.
+          thinkingConfig: model === "gemini-2.5-flash"
+            ? { thinkingBudget: 0 }
+            : { thinkingLevel: modo === "exegese" ? "medium" : "low" },
         },
       }),
     }
