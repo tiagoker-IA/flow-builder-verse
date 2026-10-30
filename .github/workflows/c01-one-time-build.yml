@@ -21,8 +21,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Instalar dependencias do lockfile
-        run: npm ci --no-audit --no-fund
+      - name: Instalar dependencias temporarias sem alterar lockfile
+        run: npm install --no-save --package-lock=false --no-audit --no-fund
       - name: Compilar a aplicacao
         run: npm run build
       - name: Verificar TypeScript da aplicacao
