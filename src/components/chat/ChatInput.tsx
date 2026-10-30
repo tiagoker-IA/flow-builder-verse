@@ -8,10 +8,9 @@ interface ChatInputProps {
   onEnviar: (mensagem: string) => void;
   disabled?: boolean;
   isLoading?: boolean;
-  suaVez?: boolean;
 }
 
-export function ChatInput({ onEnviar, disabled, isLoading, suaVez }: ChatInputProps) {
+export function ChatInput({ onEnviar, disabled, isLoading }: ChatInputProps) {
   const [mensagem, setMensagem] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -36,22 +35,9 @@ export function ChatInput({ onEnviar, disabled, isLoading, suaVez }: ChatInputPr
     }
   }, [mensagem]);
 
-  useEffect(() => {
-    if ((suaVez || isLoading) && !disabled) textareaRef.current?.focus();
-  }, [suaVez, isLoading, disabled]);
-
   return (
     <div className="border-t border-border bg-background p-4 sm:p-5">
       <div className="max-w-3xl mx-auto">
-        {isLoading ? (
-          <p className="mb-3 text-sm font-medium text-primary">
-            Pode escrever sua resposta enquanto a anterior termina.
-          </p>
-        ) : suaVez ? (
-          <p className="mb-3 text-sm font-medium text-primary">
-            Sua vez. Responda na caixa abaixo para continuarmos.
-          </p>
-        ) : null}
         <div className="flex gap-3 items-end">
           <div className="flex-1 relative">
             <Textarea
@@ -59,7 +45,7 @@ export function ChatInput({ onEnviar, disabled, isLoading, suaVez }: ChatInputPr
               value={mensagem}
               onChange={(e) => setMensagem(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isLoading ? "Escreva aqui. O envio libera quando a resposta terminar." : suaVez ? "Escreva sua resposta aqui..." : "Digite sua pergunta teológica..."}
+              placeholder={isLoading ? "A resposta está sendo preparada..." : "Escreva sua pergunta, ideia ou ajuste..."}
               disabled={disabled}
               className={cn(
                 "min-h-[48px] sm:min-h-[56px] max-h-[150px] resize-none pr-4 rounded-xl text-[15px]",
