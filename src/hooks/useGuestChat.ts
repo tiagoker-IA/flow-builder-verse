@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { Mensagem, ChatMode } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
+import { lerResposta } from "@/lib/chat-response";
 
 interface UseGuestChatProps {
   conversaId: string;
@@ -8,54 +9,6 @@ interface UseGuestChatProps {
   mensagens: Mensagem[];
   setMensagens: React.Dispatch<React.SetStateAction<Mensagem[]>>;
   persistMensagens: (conversaId: string, msgs: Mensagem[]) => void;
-}
-
-async function lerResposta(response: Response, onTexto: (texto: string) => void) {
-  if (!response.body) throw new Error("Resposta vazia");
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let respostaCompleta = "";
-  let textBuffer = "";
-  let encerrado = false;
-
-  while (!encerrado) {
-    const leitura = await Promise.race([
-      reader.read().then((item) => ({ ...item, timeout: false })),
-      new Promise<{ done: boolean; value?: Uint8Array; timeout: boolean }>((resolve) =>
-        setTimeout(() => resolve({ done: true, timeout: true }), 45000)
-      ),
-    ]);
-    if (leitura.done || leitura.timeout) break;
-    textBuffer += decoder.decode(leitura.value, { stream: true });
-    let newlineIndex: number;
-    while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-      let line = textBuffer.slice(0, newlineIndex);
-      textBuffer = textBuffer.slice(newlineIndex + 1);
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (line.startsWith(":") || line.trim() === "") continue;
-      if (!line.startsWith("data: ")) continue;
-      const jsonStr = line.slice(6).trim();
-      if (jsonStr === "[DONE]") {
-        encerrado = true;
-        break;
-      }
-      try {
-        const parsed = JSON.parse(jsonStr);
-        const content = parsed.choices?.[0]?.delta?.content;
-        if (content) {
-          respostaCompleta += content;
-          onTexto(respostaCompleta);
-        }
-      } catch {
-        textBuffer = line + "\n" + textBuffer;
-        break;
-      }
-    }
-  }
-
-  try { await reader.cancel(); } catch { /* a leitura já acabou */ }
-  if (!respostaCompleta.trim()) throw new Error("A resposta veio vazia. Tente de novo.");
-  return respostaCompleta;
 }
 
 export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persistMensagens }: UseGuestChatProps) {
@@ -127,7 +80,8 @@ export function useGuestChat({ conversaId, modo, mensagens, setMensagens, persis
     } catch (error) {
       const aviso = error instanceof Error ? error.message : "Não consegui continuar. Tente de novo.";
       setMensagens((prev) => {
-        const updated = prev.map((m) => (m.id === placeholderId ? { ...m, conteudo: aviso } : m));
+        // Não transformar uma falha de transmissão em mensagem salva da IA.
+        const updated = prev.filter((m) => m.id !== placeholderId);
         persistMensagens(idConversa, updated);
         return updated;
       });
