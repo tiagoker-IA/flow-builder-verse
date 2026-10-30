@@ -37,7 +37,10 @@ async function pedirModelo(model: string, key: string, modo: string, contents: u
           temperature: modo === "exegese" ? 0.2 : 0.4,
           // Teto de saída, não tamanho obrigatório; uso real depende de homologação de custos.
           maxOutputTokens: 4096,
-          thinkingConfig: { thinkingBudget: 0 },
+          // O Gemini 3 usa thinkingLevel; 2.5 preserva a configuração de orçamento legada.
+          thinkingConfig: model === "gemini-3.6-flash"
+            ? { thinkingLevel: modo === "exegese" ? "medium" : "low" }
+            : { thinkingBudget: 0 },
         },
       }),
     }
