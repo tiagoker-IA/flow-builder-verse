@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   build:
-    name: "Build Vite e checagem TypeScript"
+    name: "Build, TypeScript e simulacao SSE (sem API)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -27,3 +27,88 @@ jobs:
         run: npm run build
       - name: Verificar TypeScript da aplicacao
         run: ./node_modules/.bin/tsc --noEmit --project tsconfig.app.json
+      - name: Compilar e verificar backend TypeScript sem credenciais
+        run: |
+          printf 'declare const Netlify: { env: { get(key: string): string | undefined } };\n' > /tmp/c01-netlify-global.d.ts
+          ./node_modules/.bin/tsc --noEmit --strict --skipLibCheck --module NodeNext --moduleResolution NodeNext --target ES2022 --lib ES2022,DOM --types node netlify/functions/chat-ai.mts /tmp/c01-netlify-global.d.ts
+          ./node_modules/.bin/esbuild netlify/functions/chat-ai.mts --bundle --platform=node --format=esm --target=es2022 --outfile=/tmp/c01-chat-ai.mjs
+      - name: Simular sucesso, erro, truncamento e timeout sem chamar Gemini
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { pathToFileURL } from 'node:url';
+          const { default: handler } = await import(pathToFileURL('/tmp/c01-chat-ai.mjs').href);
+          const key = 'fake-key-offline';
+          const variables = { GEMINI_API_KEY: key };
+          globalThis.Netlify = { env: { get: (name) => variables[name] } };
+          const request = () => new Request('https://example.invalid/api/chat', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              modo: 'mensagem',
+              messages: [{ role: 'user', content: 'João 10:11-18, teste fictício' }],
+            }),
+          });
+          const fakeProvider = (data, status = 200) => new Response(data, {
+            status,
+            headers: { 'Content-Type': 'text/event-stream' },
+          });
+          const fakeEvent = (candidate) => 'data: ' + JSON.stringify({ candidates: [candidate] }) + '\n\n';
+          const finished = async () => {
+            const response = await handler(request());
+            assert.equal(response.status, 200);
+            assert.match(response.headers.get('Content-Type'), /text\/event-stream/);
+            const text = await response.text();
+            assert.match(text, /^: connected\n\n/);
+            return text;
+          };
+
+          let calls = 0;
+          globalThis.fetch = async (url, options) => {
+            calls++;
+            assert.match(url, /gemini-3\.8-flash:streamGenerateContent/);
+            assert.equal(options.headers['x-goog-api-key'], key);
+            return fakeProvider(fakeEvent({ content: { parts: [{ text: 'Resposta simulada.' }] }, finishReason: 'STOP' }));
+          };
+          const success = await finished();
+          assert.match(success, /Resposta simulada/);
+          assert.match(success, /data: \[DONE\]/);
+          assert.equal(calls, 1, 'Uma chamada por mensagem, sem fallback');
+
+          globalThis.fetch = async () => fakeProvider('rate limit', 429);
+          const httpError = await finished();
+          assert.match(httpError, /provider_http_error/);
+          assert.doesNotMatch(httpError, /data: \[DONE\]/);
+
+          globalThis.fetch = async () => fakeProvider(fakeEvent({
+            content: { parts: [{ text: 'Texto parcial' }] }, finishReason: 'MAX_TOKENS',
+          }));
+          const truncated = await finished();
+          assert.match(truncated, /response_truncated/);
+          assert.doesNotMatch(truncated, /data: \[DONE\]/);
+
+          const originalTimeout = globalThis.setTimeout;
+          globalThis.setTimeout = (fn, ms, ...args) => originalTimeout(fn, ms === 20_000 ? 25 : ms, ...args);
+          globalThis.fetch = async (_url, opts) => new Promise((_resolve, reject) => {
+            opts.signal.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+          });
+          try {
+            const timeout = await finished();
+            assert.match(timeout, /provider_timeout/);
+            assert.doesNotMatch(timeout, /data: \[DONE\]/);
+          } finally {
+            globalThis.setTimeout = originalTimeout;
+          }
+
+          globalThis.fetch = async () => new Promise(() => {});
+          const pendingResponse = await handler(request());
+          const reader = pendingResponse.body.getReader();
+          const { value } = await reader.read();
+          assert.match(new TextDecoder().decode(value), /^: connected\n\n/);
+          await reader.cancel();
+
+          delete variables.GEMINI_API_KEY;
+          const missingKey = await handler(request());
+          assert.equal(missingKey.status, 500);
+          console.log('PASS: success, 429, MAX_TOKENS, header timeout, early SSE, missing key; no real requests');
+          NODE
