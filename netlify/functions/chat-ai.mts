@@ -144,7 +144,7 @@ export default async (req: Request) => {
       const totalTimer = setTimeout(() => {
         abort.abort();
         fail("response_timeout", "A resposta ultrapassou o prazo seguro. Nenhum texto parcial foi salvo como completo.");
-      }, 52_000);
+      }, 55_000);
       // Heartbeats impedem uma conexão inativa enquanto a API trabalha.
       const heartbeat = setInterval(() => {
         if (!closed) controller.enqueue(encoder.encode(": heartbeat\n\n"));
@@ -199,7 +199,7 @@ export default async (req: Request) => {
             headerTimer = setTimeout(() => {
               resolve({ kind: "timeout" });
               abort.abort();
-            }, 20_000);
+            }, 42_000);
           }),
         ]);
         if (headerTimer) clearTimeout(headerTimer);
