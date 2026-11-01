@@ -197,8 +197,8 @@ export default async (req: Request) => {
             .catch(() => ({ kind: "network_error" as const })),
           new Promise<{ kind: "timeout" }>(resolve => {
             headerTimer = setTimeout(() => {
-              abort.abort();
               resolve({ kind: "timeout" });
+              abort.abort();
             }, 20_000);
           }),
         ]);
